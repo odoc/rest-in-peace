@@ -58,10 +58,6 @@ export class ResourceAuthorizer {
         return;
       }
     }
-    if (this.customMethod == null) {
-      this.requestHandler(request, response);
-    } else {
-      this.requestHandler(request, response, this.customMethod);
-    }
+    this.requestHandler(this.method, request, response);
   }
 }
