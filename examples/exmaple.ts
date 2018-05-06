@@ -49,7 +49,7 @@ class UsersResourceHandler extends ResourceHandler {
   }
 
   // TODO
-  protected getGetParams(): stirng[] {
+  protected getGetParams(): string[] {
     return ["userId"]
   }
 
@@ -99,5 +99,10 @@ const authHandler = MyServiceAuthHandler.getHandler()
 myService.setAuthHandler(authHandler);
 myService.setSupportedVersions([2, 3, 4]);
 
-myService.setResourceHandler(UsersResourceHandler.getHandler());
-myService.setResourceHandler(BooksResourceHandler.getHandler());
+const usersHandler = new UsersResourceHandler(myService)
+const nestedBookHandler = new BooksResourceHandler(myService, usersHandler); // /usres/1/books/b1
+const bookHandler = new BooksResourceHandler(myService); // /books/b1
+
+myService.start();
+
+

@@ -1,0 +1,42 @@
+{
+  "name": "rest-services",
+  "version": "1.0.0",
+  "description": "REST services framework that enforces the service developers to follow REST like patterns. ",
+  "main": "dist/main.js",
+  "directories": {
+    "example": "examples"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/github.com/rest-services.git"
+  },
+  "keywords": [
+    "REST",
+    "HTTP",
+    "resources",
+    "representations",
+    "verbs",
+    "POST",
+    "GET",
+    "PUT",
+    "DELETE",
+    "API",
+    "versioning",
+    "Authorization"
+  ],
+  "author": "Chethiya Abeysinghe",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/github.com/rest-services/issues"
+  },
+  "homepage": "https://github.com/github.com/rest-services#readme",
+  "dependencies": {
+    "express": "^4.16.3"
+  },
+  "devDependencies": {
+    "@types/express": "^4.11.1"
+  }
+}
