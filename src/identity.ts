@@ -8,9 +8,22 @@ export class Identity {
   }
 
   private sortRoles() {
-    // TODO this should be an inerstion sort because it's very
-    // likely that the given list is already sorted
-    this.roles.sort();
+    // This is inerstion sort because it's very
+    // likely that the given list is already sorted.
+    // With already sorted assumtion it's O(n) instead of O(n^2)
+
+    // Also if the list is small (say n < 10), then insertion sort is faster
+    // than quick sort.
+
+    for (let i = 1; i < this.roles.length; ++i) {
+      const curVal = this.roles[i];
+      let j = i - 1;
+      while (j >= 0 && this.roles[j] > curVal) {
+        this.roles[j + 1] = this.roles[j];
+        --j;
+      }
+      this.roles[j + 1] = curVal;
+    }
 
     this.didSortRoles = true;
   }

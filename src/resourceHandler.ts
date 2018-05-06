@@ -1,3 +1,10 @@
+/*  TODOs
+
+Representation base classe and handler parseing representations
+ResourceResponse implemntations
+
+*/
+
 import { Service, ServiceInterface } from './service';
 import { Router, Express, Request, Response } from 'express';
 import { Identity } from './identity';
@@ -60,6 +67,10 @@ export abstract class ResourceHandler {
 
   public getService(): ServiceInterface {
     return this.service;
+  }
+
+  public getRouter(): Router {
+    return this.router;
   }
 
   private parseAccessInfo() {
@@ -179,7 +190,7 @@ export abstract class ResourceHandler {
   // TODO abstract get, put, post and delete : each returning ResourcrResponse
 
   // Returns the resource name
-  protected abstract getResourceIdentifierInPlural(): string;
+  public abstract getResourceIdentifierInPlural(): string;
 
   protected abstract getCustomMethods(): string[];
 

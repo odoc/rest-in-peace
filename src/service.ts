@@ -72,7 +72,7 @@ export class Service implements ServiceInterface {
         handler.getRouter()
       );
     } else {
-      parentHandler.getRouter().user(
+      parentHandler.getRouter().use(
         handler.getResourceIdentifierInPlural(),
         handler.getRouter()
       );
