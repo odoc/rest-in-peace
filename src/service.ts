@@ -72,10 +72,11 @@ export class Service implements ServiceInterface {
 
   public registerRootResourceHandler(
     handler: ResourceHandler,
+    router: Router
   ) {
     this.serviceRouter.use(
       `/${handler.getResourceIdentifierInPlural()}`,
-      handler.getRouter()
+      router
     )
     this.rootResourceHandlers.push(handler);
   }

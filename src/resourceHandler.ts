@@ -59,17 +59,18 @@ export abstract class ResourceHandler {
     this.parseCustomMethods();
     this.parseAccessInfo();
 
-    this.router = Router()
     this.setupMethodHandlers()
     this.setupParentHandlers();
 
     if (parentHandler == null) {
-      this.service.registerRootResourceHandler(this);
+      this.router = Router();
+      this.service.registerRootResourceHandler(this, this.router);
     } else {
+      this.router = Router({ mergeParams: true });
       parentHandler.getRouter().use(
         `/:${parentHandler.getParamId()}/${this.getResourceIdentifierInPlural()}
         `,
-        this.getRouter()
+        this.router
       )
     }
   }
@@ -82,7 +83,7 @@ export abstract class ResourceHandler {
     return this.service;
   }
 
-  public getRouter(): Router {
+  protected getRouter(): Router {
     return this.router;
   }
 
