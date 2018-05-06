@@ -9,6 +9,7 @@ import { Service, ServiceInterface } from './service';
 import { Router, Express, Request, Response } from 'express';
 import { Identity } from './identity';
 import { ResourceAuthorizer } from './resourceAuthorizer'
+import { ResourceRequest, ResourceId } from './resourceRequest';
 
 export enum Method {
   GET = "GET", // get a specific resource
@@ -45,6 +46,8 @@ export abstract class ResourceHandler {
   private accessInfo = new Map<Method | string, ResourceAccessInfo>();
   private customMethodNames: string[] = [];
   private allMethodNames: (Method | string)[] = [];
+  private allResourceHandlers: ResourceHandler[] = [];
+  private allResourceIdClasses: (typeof ResourceId)[] = [];
 
   public constructor(service: ServiceInterface, parentHandler?: ResourceHandler) {
     this.service = service as Service;
@@ -57,8 +60,18 @@ export abstract class ResourceHandler {
     this.parseAccessInfo();
 
     this.router = Router()
-    this.setup()
-    this.service.registerResourceHandler(this, parentHandler);
+    this.setupMethodHandlers()
+    this.setupParentHandlers();
+
+    if (parentHandler == null) {
+      this.service.registerRootResourceHandler(this);
+    } else {
+      parentHandler.getRouter().use(
+        `/:${parentHandler.getParamId()}/${this.getResourceIdentifierInPlural()}
+        `,
+        this.getRouter()
+      )
+    }
   }
 
   public getParamId(): string {
@@ -96,8 +109,20 @@ export abstract class ResourceHandler {
     })
   }
 
+  // Setting up ancestry
+  private setupParentHandlers() {
+    let curHandler: ResourceHandler | undefined = this;
+    while (curHandler != null) {
+      this.allResourceHandlers.push(curHandler);
+      this.allResourceIdClasses.push(curHandler.getResourceIdClass());
+      curHandler = curHandler.parentHandler;
+    }
+    this.allResourceHandlers.reverse();
+    this.allResourceIdClasses.reverse();
+  }
+
   // Setup endpoints
-  private setup() {
+  private setupMethodHandlers() {
     this.onMethod = this.onMethod.bind(this);
 
     let authorizers = new Map<Method, ResourceAuthorizer>();
@@ -141,7 +166,7 @@ export abstract class ResourceHandler {
     this.customMethodNames.forEach((method) => {
       const auth = new ResourceAuthorizer(
         this,
-        this.customMethod.bind(this),
+        this.onMethod,
         this.accessInfo.get(method) as ResourceAccessInfo,
         method
       )
@@ -174,6 +199,15 @@ export abstract class ResourceHandler {
 
   private onMethod(method: Method | string, req: Request, res: Response) {
     // Handle all methods here before calling acutal implementation
+
+    let request: ResourceRequest = new ResourceRequest(
+      req,
+      this.allResourceHandlers,
+      this.allResourceIdClasses
+    );
+
+    // TODO
+    // Call the correct handler with the generated request
   }
 
 
@@ -211,7 +245,9 @@ export abstract class ResourceHandler {
     method: Method | string
   ): boolean;
 
-  protected abstract getAuthorizationRoles(
-    method: Method | string
-  ): (AuthHandler.Role | string)[];
+  protected abstract getAuthorizationRoles(method: Method | string): string[];
+
+  protected getResourceIdClass(): typeof ResourceId {
+    return ResourceId;
+  }
 }

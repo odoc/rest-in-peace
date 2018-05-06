@@ -20,6 +20,7 @@ export function createService(
   return new Service(name, port, basePath, supportedVersions, authHandler);
 }
 
+const VERSION_ID = "version";
 
 export class Service implements ServiceInterface {
   private name: string;
@@ -30,7 +31,7 @@ export class Service implements ServiceInterface {
 
   private app: Express;
   private serviceRouter: Router;
-  private resourceHandlers: ResourceHandler[] = [];
+  private rootResourceHandlers: ResourceHandler[] = [];
 
   private static ports = new Set<number>();
   private static acquirePort(port: number): boolean {
@@ -39,6 +40,10 @@ export class Service implements ServiceInterface {
     }
     Service.ports.add(port);
     return true;
+  }
+
+  public static getVersionParamId(): string {
+    return VERSION_ID;
   }
 
   constructor(
@@ -59,25 +64,20 @@ export class Service implements ServiceInterface {
     }
     this.app = express()
     this.serviceRouter = express.Router();
-    this.app.use(this.basePath, this.serviceRouter);
+    if (this.basePath[0] != '/') {
+      this.basePath = `/${this.basePath}`;
+    }
+    this.app.use(`/:${VERSION_ID}${this.basePath}`, this.serviceRouter);
   }
 
-  public registerResourceHandler(
+  public registerRootResourceHandler(
     handler: ResourceHandler,
-    parentHandler?: ResourceHandler
   ) {
-    if (parentHandler == null) {
-      this.serviceRouter.use(
-        handler.getResourceIdentifierInPlural(),
-        handler.getRouter()
-      );
-    } else {
-      parentHandler.getRouter().use(
-        handler.getResourceIdentifierInPlural(),
-        handler.getRouter()
-      );
-    }
-    this.resourceHandlers.push(handler);
+    this.serviceRouter.use(
+      `/${handler.getResourceIdentifierInPlural()}`,
+      handler.getRouter()
+    )
+    this.rootResourceHandlers.push(handler);
   }
 
   public async getIdentity(token?: string): Promise<Identity | null> {
