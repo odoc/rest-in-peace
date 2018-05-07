@@ -1,4 +1,5 @@
 export class Identity {
+  // TODO userID
   private name: string;
   private roles: string[];
   private didSortRoles: boolean = false;

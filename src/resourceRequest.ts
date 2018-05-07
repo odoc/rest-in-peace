@@ -72,6 +72,7 @@ export class ResourceRequest implements ResourceRequestInterface {
   private resources = new Map<string, Resource>();
   private curResource: Resource;
 
+  // TODO identity
   // TODO receive representation and save it here
   // TODO it can be an array of representations
   public constructor(
