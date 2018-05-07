@@ -20,6 +20,7 @@
 import { Request } from 'express';
 import { ResourceHandler } from './resourceHandler';
 import { Service } from './service';
+import { Representation } from './representation';
 
 export class ResourceId {
   private _value: string;
@@ -71,6 +72,8 @@ export class ResourceRequest implements ResourceRequestInterface {
   private resources = new Map<string, Resource>();
   private curResource: Resource;
 
+  // TODO receive representation and save it here
+  // TODO it can be an array of representations
   public constructor(
     request: Request,
     resourceHandlers: ResourceHandler[],

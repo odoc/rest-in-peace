@@ -10,6 +10,7 @@ import { Router, Express, Request, Response } from 'express';
 import { Identity } from './identity';
 import { ResourceAuthorizer } from './resourceAuthorizer'
 import { ResourceRequest, ResourceId } from './resourceRequest';
+import { Representation } from './representation';
 
 export enum Method {
   GET = "GET", // get a specific resource
@@ -21,12 +22,12 @@ export enum Method {
   GET_ALL = "GET_ALL" // get all on resources
 }
 
-const METHODS = new Set<Method>([
-  Method.GET,
-  Method.GET_ALL,
-  Method.PUT,
-  Method.POST,
-  Method.DELETE
+const METHOD_HANDLERS = new Map<Method, string>([
+  [Method.GET, "onGetAll"],
+  [Method.GET_ALL, "onGetAll"],
+  [Method.PUT, "onPut"],
+  [Method.POST, "onPost"],
+  [Method.DELETE, "onDelete"]
 ]);
 
 export interface ResourceAccessInfo {
@@ -46,6 +47,8 @@ export abstract class ResourceHandler {
   private accessInfo = new Map<Method | string, ResourceAccessInfo>();
   private customMethodNames: string[] = [];
   private allMethodNames: (Method | string)[] = [];
+  private methodHandlers = new Map<Method,
+    (request: ResourceRequest) => Promise<ResourceResponse>>();
   private allResourceHandlers: ResourceHandler[] = [];
   private allResourceIdClasses: (typeof ResourceId)[] = [];
 
@@ -97,12 +100,12 @@ export abstract class ResourceHandler {
   }
 
   private parseCustomMethods() {
-    METHODS.forEach((method: Method) => {
+    METHOD_HANDLERS.forEach((_: string, method: Method) => {
       this.allMethodNames.push(method);
     })
     const arr = this.getCustomMethods();
     arr.forEach((method) => {
-      if (METHODS.has(method as Method)) {
+      if (METHOD_HANDLERS.has(method as Method)) {
         throw new Error(`Invalid custom method name ${method}`);
       }
       this.customMethodNames.push(method);
@@ -124,10 +127,19 @@ export abstract class ResourceHandler {
 
   // Setup endpoints
   private setupMethodHandlers() {
+    // setup methods
     this.onMethod = this.onMethod.bind(this);
+    METHOD_HANDLERS.forEach((handlerName, method: Method) => {
+      const func = (this as any)[handlerName] as
+        (request: ResourceRequest) => Promise<ResourceResponse>;
+      if (func == undefined) {
+        throw new Error(`Method handler ${handlerName} does not exist`);
+      }
+      this.methodHandlers.set(method, func.bind(this));
+    });
 
     let authorizers = new Map<Method, ResourceAuthorizer>();
-    METHODS.forEach((method: Method) => {
+    METHOD_HANDLERS.forEach((_: string, method: Method) => {
       const authorizer = new ResourceAuthorizer(
         this,
         this.onMethod,
@@ -193,33 +205,40 @@ export abstract class ResourceHandler {
     );
   }
 
+  // Handler for all method requests
+  private async onMethod(method: Method | string, req: Request, res: Response) {
+    // TODO valid req headers like Accept, Conetnt-Type etc all have to be JSON
 
-
-
-  // private endpoint listenrs
-
-  private onMethod(method: Method | string, req: Request, res: Response) {
-    // Handle all methods here before calling acutal implementation
-
+    // TODO extract the correct represetantion class.
+    // TODO POST might be capable of accepting array of representations to
+    // create multiple items
     let request: ResourceRequest = new ResourceRequest(
       req,
       this.allResourceHandlers,
       this.allResourceIdClasses
     );
 
+
+
     // TODO
     // Call the correct handler with the generated request
-  }
+    const func = this.methodHandlers.get(method as Method);
+    let response: ResourceResponse;
+    try {
+      if (func != null) {
+        response = await func(request);
+      } else {
+        response = await this.onCustomMethod(method, request);
+      }
+    } catch (e) {
+      // TODO create response on handler error
+    }
 
+    if (method == Method.GET_ALL) {
+      // TODO check where reponse is an array of representations
+    }
 
-  // Get be used from extending classes to get the current resource
-  protected getResource(): Resource {
-    // TODO
-  }
-
-  // Retruns the parent resources if exists from top to bottom
-  protected getParentResources(): Resource[] {
-
+    response.send(res);
   }
 
   // TODO abstract get, put, post and delete : each returning ResourcrResponse
@@ -227,7 +246,9 @@ export abstract class ResourceHandler {
   // Returns the resource name
   public abstract getResourceIdentifierInPlural(): string;
 
-  protected abstract getCustomMethods(): string[];
+  protected getCustomMethods(): string[] {
+    return [];
+  }
 
   protected abstract getRepresentationClass(
     version: number
@@ -237,10 +258,12 @@ export abstract class ResourceHandler {
   // Posts can have a dedicated query key called "method". For each method we
   // should be able to set representations separately. If client doesn't pass
   // an ID then the method has to be create
-  protected abstract getRepresentationClassForCustomMethod(
+  protected getRepresentationClassForCustomMethod(
     method: string,
     version: number
-  ): typeof Representation;
+  ): typeof Representation {
+    return this.getRepresentationClass(version);
+  }
 
   protected abstract isAuthenticated(
     method: Method | string
@@ -251,4 +274,24 @@ export abstract class ResourceHandler {
   protected getResourceIdClass(): typeof ResourceId {
     return ResourceId;
   }
+
+  protected abstract async onGetAll(
+    request: ResourceRequest
+  ): Promise<ResourceResponse>;
+  protected abstract async onGet(
+    request: ResourceRequest
+  ): Promise<ResourceResponse>;
+  protected abstract async onPut(
+    request: ResourceRequest
+  ): Promise<ResourceResponse>;
+  protected abstract async onPost(
+    request: ResourceRequest
+  ): Promise<ResourceResponse>;
+  protected abstract async onDelete(
+    request: ResourceRequest
+  ): Promise<ResourceResponse>;
+  protected abstract async onCustomMethod(
+    method: string,
+    request: ResourceRequest
+  ): Promise<ResourceResponse>;
 }
