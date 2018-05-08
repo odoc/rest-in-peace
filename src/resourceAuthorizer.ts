@@ -1,6 +1,7 @@
 import { ResourceHandler, ResourceAccessInfo, Method } from "./resourceHandler";
 import { Request, Response } from 'express'
 import { Service } from './service';
+import { Identity } from "./identity";
 
 export class ResourceAuthorizer {
   public constructor(
@@ -9,6 +10,7 @@ export class ResourceAuthorizer {
       method: Method | string,
       request: Request,
       response: Response,
+      identity?: Identity
     ) => void,
     private accessInfo: ResourceAccessInfo,
     private method: Method | string
@@ -17,8 +19,9 @@ export class ResourceAuthorizer {
   }
 
   public async handler(request: Request, response: Response) {
+    let identity: Identity | undefined = undefined;
     if (this.accessInfo.isAuthenticated) {
-      const identity = await (<Service>this.resourceHandler.getService())
+      identity = await (<Service>this.resourceHandler.getService())
         .getIdentity(
           request.headers.authorization
         );
@@ -27,7 +30,7 @@ export class ResourceAuthorizer {
         errorResponse = ErrorResourceResponse.getUnauthenticated();
       } else {
         const supportedRoles = this.accessInfo.supportedRoles;
-        const roles = identity.getSortedRoles();
+        const roles = identity.sortedRoles;
         // TODO search two sorted array for non-empty join
         let found = false;
         if (supportedRoles.length > 0 && roles.length > 0) {
@@ -58,6 +61,6 @@ export class ResourceAuthorizer {
         return;
       }
     }
-    this.requestHandler(this.method, request, response);
+    this.requestHandler(this.method, request, response, identity);
   }
 }

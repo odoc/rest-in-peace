@@ -19,8 +19,8 @@
 
 import { Request } from 'express';
 import { ResourceHandler } from './resourceHandler';
-import { Service } from './service';
 import { Representation } from './representation';
+import { Identity } from './identity';
 
 export class ResourceId {
   private _value: string;
@@ -65,27 +65,39 @@ export interface ResourceRequestInterface {
 export class ResourceRequest implements ResourceRequestInterface {
   private _params: any;
   private _query: any;
-  private _representation: Representation;
   private _version: number;
   private _request: Request;
+  private _representation?: Representation;
+  private _representations?: Representation[];
+  private _identity?: Identity;
+  private _isArray = false;
 
   private resources = new Map<string, Resource>();
   private curResource: Resource;
 
-  // TODO identity
-  // TODO receive representation and save it here
   // TODO it can be an array of representations
   public constructor(
     request: Request,
     resourceHandlers: ResourceHandler[],
-    resourceIdClasses: (typeof ResourceId)[]
+    resourceIdClasses: (typeof ResourceId)[],
+    version: number,
+    representation?: Representation | Representation[],
+    identity?: Identity
   ) {
     this._request = request;
     this._params = request.params;
     this._query = request.query;
+    this._version = version;
+
+    if (Array.isArray(representation)) {
+      this._representations = representation
+      this._isArray = true;
+    } else {
+      this._representation = representation;
+    }
+    this._identity = identity;
 
     //extract version
-    this._version = request.params[Service.getVersionParamId()];
 
     // Generate resources
     let lastResource: Resource | undefined = undefined;
@@ -113,8 +125,20 @@ export class ResourceRequest implements ResourceRequestInterface {
     return this._version;
   }
 
-  public get representation(): Representation {
+  public isArray(): boolean {
+    return this._isArray;
+  }
+
+  public get representation(): Representation | undefined {
     return this._representation;
+  }
+
+  public get allRepresentation(): Representation[] | undefined {
+    return this._representations;
+  }
+
+  public get identity(): Identity | undefined {
+    return this._identity;
   }
 
   public getResource(resourceIdentifier?: string): Resource | undefined {

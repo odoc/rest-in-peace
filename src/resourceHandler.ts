@@ -51,6 +51,9 @@ export abstract class ResourceHandler {
     (request: ResourceRequest) => Promise<ResourceResponse>>();
   private allResourceHandlers: ResourceHandler[] = [];
   private allResourceIdClasses: (typeof ResourceId)[] = [];
+  private representationClasses = new Map<number, typeof Representation>();
+  private customRepresentationClasses = new Map<Method | string,
+    Map<number, typeof Representation>>();
 
   public constructor(service: ServiceInterface, parentHandler?: ResourceHandler) {
     this.service = service as Service;
@@ -62,8 +65,9 @@ export abstract class ResourceHandler {
     this.parseCustomMethods();
     this.parseAccessInfo();
 
-    this.setupMethodHandlers()
+    this.setupMethodHandlers();
     this.setupParentHandlers();
+    this.setupRepresentationClasses();
 
     if (parentHandler == null) {
       this.router = Router();
@@ -97,6 +101,26 @@ export abstract class ResourceHandler {
         supportedRoles: this.getAuthorizationRoles(method).sort()
       })
     });
+  }
+
+  private setupRepresentationClasses() {
+    this.service.getSupportedVersions().forEach((version) => {
+      this.representationClasses.set(
+        version,
+        this.getRepresentationClass(version)
+      );
+      this.customMethodNames.forEach((method) => {
+        let custom = this.customRepresentationClasses.get(method);
+        if (custom == null) {
+          custom = new Map<number, typeof Representation>();
+          this.customRepresentationClasses.set(method, custom);
+        }
+        custom.set(version, this.getRepresentationClassForCustomMethod(
+          method,
+          version
+        ));
+      })
+    })
   }
 
   private parseCustomMethods() {
@@ -206,24 +230,84 @@ export abstract class ResourceHandler {
   }
 
   // Handler for all method requests
-  private async onMethod(method: Method | string, req: Request, res: Response) {
-    // TODO valid req headers like Accept, Conetnt-Type etc all have to be JSON
+  private async onMethod(
+    method: Method | string,
+    req: Request,
+    res: Response,
+    identity?: Identity
+  ) {
+    let response: ResourceResponse;
 
-    // TODO extract the correct represetantion class.
-    // TODO POST might be capable of accepting array of representations to
-    // create multiple items
+    // Validate media types
+    if (req.headers.accept != "application/json") {
+      response = ClientErrorResourceResponse.notAcceptable();
+    } else if (req.headers["content-type"] != "application/json") {
+      response = ClienetErrorResourceResponse.unsupportedMediaType();
+    }
+
+    const func = this.methodHandlers.get(method as Method);
+    const version = req.params[Service.getVersionParamId()];
+    let representationClass: typeof Representation;
+
+    // get the correct representation calss
+    if (func != null) { // in-build method
+      representationClass = this.representationClasses.get(version) as
+        typeof Representation;
+    } else { // custom method
+      representationClass = (<any>this.customRepresentationClasses.get(method)).
+        get(version) as typeof Representation;;
+    }
+
+    // extract represetnation
+    // req.body.data can be an array of representations
+    // In such case there need to be additioanl req.body.isArray flag
+    let representation: Representation | undefined;
+    let representations: Representation[] = [];
+    // payload have a top level "data" key
+    const data = req.body.data;
+    const isArray = req.body.isArray;
+    if (method == Method.POST || method == Method.PUT) {
+      if (data == null) {
+        return Promise.resolve(ClienetErrorResourceResponse.unsupportedEntity(
+          "No represetnation."
+        ));
+      }
+    }
+    if (isArray == true && method != Method.POST) {
+      return Promise.resolve(ClienetErrorResourceResponse.unsupportedEntity(
+        "Can't PUT an array of representations."
+      ));
+    }
+    if (data != null) {
+      try {
+        if (isArray) {
+          if (!Array.isArray(data)) {
+            throw new Error("Not an array.");
+          }
+          data.forEach((item) => {
+            representations.push(representationClass.parse(item));
+          })
+        } else {
+          representation = representationClass.parse(data);
+        }
+      } catch (e) {
+        return Promise.resolve(ClientErrorResourceResponse.unsupportedEntity(
+          e.message
+        ))
+      }
+    }
+
     let request: ResourceRequest = new ResourceRequest(
       req,
       this.allResourceHandlers,
-      this.allResourceIdClasses
+      this.allResourceIdClasses,
+      version,
+      isArray == true ? representations : representation,
+      identity
     );
-
-
 
     // TODO
     // Call the correct handler with the generated request
-    const func = this.methodHandlers.get(method as Method);
-    let response: ResourceResponse;
     try {
       if (func != null) {
         response = await func(request);
@@ -231,7 +315,9 @@ export abstract class ResourceHandler {
         response = await this.onCustomMethod(method, request);
       }
     } catch (e) {
-      // TODO create response on handler error
+      return Promise.resolve(
+        ServerErrorResourceResponse.internalServerError(e.message)
+      )
     }
 
     if (method == Method.GET_ALL) {

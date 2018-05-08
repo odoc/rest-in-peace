@@ -1,11 +1,16 @@
 export class Identity {
-  // TODO userID
-  private name: string;
-  private roles: string[];
+  private _userId: string;
+  private _name: string;
+  private _roles: string[];
   private didSortRoles: boolean = false;
-  public constructor(name: string, roles: string[]) {
-    this.name = name;
-    this.roles = roles;
+
+  public constructor(userId: string,
+    name: string,
+    optionalSortedRoles: string[]
+  ) {
+    this._userId = userId;
+    this._name = name;
+    this._roles = optionalSortedRoles;
   }
 
   private sortRoles() {
@@ -16,27 +21,31 @@ export class Identity {
     // Also if the list is small (say n < 10), then insertion sort is faster
     // than quick sort.
 
-    for (let i = 1; i < this.roles.length; ++i) {
-      const curVal = this.roles[i];
+    for (let i = 1; i < this._roles.length; ++i) {
+      const curVal = this._roles[i];
       let j = i - 1;
-      while (j >= 0 && this.roles[j] > curVal) {
-        this.roles[j + 1] = this.roles[j];
+      while (j >= 0 && this._roles[j] > curVal) {
+        this._roles[j + 1] = this._roles[j];
         --j;
       }
-      this.roles[j + 1] = curVal;
+      this._roles[j + 1] = curVal;
     }
 
     this.didSortRoles = true;
   }
 
-  public getName(): string {
-    return this.name;
+  public get userId() {
+    return this._userId;
   }
 
-  public getSortedRoles(): string[] {
+  public get name() {
+    return this._name;
+  }
+
+  public get sortedRoles(): string[] {
     if (!this.didSortRoles) {
       this.sortRoles();
     }
-    return this.roles;
+    return this._roles;
   }
 }

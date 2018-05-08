@@ -81,9 +81,9 @@ export class Service implements ServiceInterface {
     this.rootResourceHandlers.push(handler);
   }
 
-  public async getIdentity(token?: string): Promise<Identity | null> {
+  public async getIdentity(token?: string): Promise<Identity | undefined> {
     if (token == null || this.authHandler == null) {
-      return Promise.resolve(null);
+      return Promise.resolve(undefined);
     } else {
       const identity = await this.authHandler.authenticate(token);
       return Promise.resolve(identity);
@@ -93,5 +93,9 @@ export class Service implements ServiceInterface {
   public listen(callback?: Function): Server {
     const server = this.app.listen(this.port, callback);
     return server;
+  }
+
+  public getSupportedVersions(): number[] {
+    return this.supportedVersions;
   }
 }
