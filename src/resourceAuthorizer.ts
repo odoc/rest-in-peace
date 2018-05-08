@@ -25,8 +25,8 @@ export class ResourceAuthorizer {
         .getIdentity(
           request.headers.authorization
         );
-      let errorResponse: ErrorResourceResponse | null = null;
-      if (identity == null) {
+      let errorResponse: ErrorResourceResponse | undefined = undefined;
+      if (identity == undefined) {
         errorResponse = ErrorResourceResponse.getUnauthenticated();
       } else {
         const supportedRoles = this.accessInfo.supportedRoles;
@@ -56,7 +56,7 @@ export class ResourceAuthorizer {
           errorResponse = ErrorResourceResponse.getUnauthorized();
         }
       }
-      if (errorResponse != null) {
+      if (errorResponse != undefined) {
         errorResponse.send(response);
         return;
       }

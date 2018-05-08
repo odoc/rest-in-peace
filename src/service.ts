@@ -82,7 +82,7 @@ export class Service implements ServiceInterface {
   }
 
   public async getIdentity(token?: string): Promise<Identity | undefined> {
-    if (token == null || this.authHandler == null) {
+    if (token == undefined || this.authHandler == undefined) {
       return Promise.resolve(undefined);
     } else {
       const identity = await this.authHandler.authenticate(token);

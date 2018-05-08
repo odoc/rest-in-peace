@@ -11,12 +11,19 @@ export interface Schema {
   [property: string]: SchemaProperty | Schema;
 }
 
-export function validateSchema(schema: Schema, object: any): string | null {
+export function validateSchema(
+  schema: Schema,
+  object: any
+): string | undefined {
   const result = validateSchemaFunc(schema, object, "");
   return result;
 }
 
-function validateSchemaFunc(schema: Schema, object: any, jsonPath: string): string | null {
+function validateSchemaFunc(
+  schema: Schema,
+  object: any,
+  jsonPath: string
+): string | undefined {
   if (object == null) {
     return "Invalid null object"
   }
@@ -34,20 +41,20 @@ function validateSchemaFunc(schema: Schema, object: any, jsonPath: string): stri
         object[key],
         `${jsonPath}.${key}`
       );
-      if (result != null) {
+      if (result != undefined) {
         return result;
       }
     }
 
-    if (def.mandatory && object[key] == null) {
+    if (def.mandatory && object[key] == undefined) {
       return `Missing property ${jsonPath}.${key}`;
     }
-    if (def.type != null && def.type != typeof object[key]) {
+    if (def.type != undefined && def.type != typeof object[key]) {
       return `Invalid type ${def.type} in ${jsonPath}.${key}`
     }
   }
 
-  return null;
+  return undefined;
 }
 
 export abstract class Representation {
@@ -59,8 +66,8 @@ export abstract class Representation {
   }
 
   // User can implement this if schema needs to be enforced
-  public static getSchema(): Schema | null {
-    return null;
+  public static getSchema(): Schema | undefined {
+    return undefined;
   }
 
   public constructor(json: any) {
@@ -71,7 +78,7 @@ export abstract class Representation {
   public abstract getJSON(): any;
 
   // TODO To be done later.
-  protected getETag(): string | null {
-    return null;
+  protected getETag(): string | undefined {
+    return undefined;
   }
 }

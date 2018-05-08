@@ -69,7 +69,7 @@ export abstract class ResourceHandler {
     this.setupParentHandlers();
     this.setupRepresentationClasses();
 
-    if (parentHandler == null) {
+    if (parentHandler == undefined) {
       this.router = Router();
       this.service.registerRootResourceHandler(this, this.router);
     } else {
@@ -111,7 +111,7 @@ export abstract class ResourceHandler {
       );
       this.customMethodNames.forEach((method) => {
         let custom = this.customRepresentationClasses.get(method);
-        if (custom == null) {
+        if (custom == undefined) {
           custom = new Map<number, typeof Representation>();
           this.customRepresentationClasses.set(method, custom);
         }
@@ -140,7 +140,7 @@ export abstract class ResourceHandler {
   // Setting up ancestry
   private setupParentHandlers() {
     let curHandler: ResourceHandler | undefined = this;
-    while (curHandler != null) {
+    while (curHandler != undefined) {
       this.allResourceHandlers.push(curHandler);
       this.allResourceIdClasses.push(curHandler.getResourceIdClass());
       curHandler = curHandler.parentHandler;
@@ -212,14 +212,16 @@ export abstract class ResourceHandler {
     this.router.post(
       `/:${this.paramId}`,
       (req: Request, res: Response) => {
-        const method: string | null = req.query.method;
-        if (method == null) {
+        const method: string | undefined = req.query.method;
+        if (method == undefined) {
           const errorResponse = ErrorResourceResponse.getMethodNotImplemented(method);
           errorResponse.send(res);
         } else {
           const authorizer = customAuthorizers.get(method);
-          if (authorizer == null) {
-            const errorResponse = ErrorResourceResponse.getMethodNotImplemented(method);
+          if (authorizer == undefined) {
+            const errorResponse = ErrorResourceResponse.getMethodNotImplemented(
+              method
+            );
             errorResponse.send(res);
           } else {
             authorizer.handler(req, res);
@@ -250,7 +252,7 @@ export abstract class ResourceHandler {
     let representationClass: typeof Representation;
 
     // get the correct representation calss
-    if (func != null) { // in-build method
+    if (func != undefined) { // in-build method
       representationClass = this.representationClasses.get(version) as
         typeof Representation;
     } else { // custom method
@@ -309,7 +311,7 @@ export abstract class ResourceHandler {
     // TODO
     // Call the correct handler with the generated request
     try {
-      if (func != null) {
+      if (func != undefined) {
         response = await func(request);
       } else {
         response = await this.onCustomMethod(method, request);

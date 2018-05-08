@@ -142,7 +142,7 @@ export class ResourceRequest implements ResourceRequestInterface {
   }
 
   public getResource(resourceIdentifier?: string): Resource | undefined {
-    if (resourceIdentifier == null) {
+    if (resourceIdentifier == undefined) {
       return this.curResource;
     } else {
       return this.resources.get(resourceIdentifier)

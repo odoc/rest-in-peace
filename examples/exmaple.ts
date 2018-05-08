@@ -113,7 +113,7 @@ class UsersResourceHandler extends ResourceHandler {
     const user: User = await User.get<User>(
       { id: request.identity.id }
     );
-    if (user == null) {
+    if (user == undefined) {
       return Promise.resolve(ClienetErrorResourceResponse.notFound())
     } else {
       const userRep = UserRepresentation.fromModel(user);
@@ -130,7 +130,7 @@ class UsersResourceHandler extends ResourceHandler {
     let user: User = await User.get<User>(
       { id: request.identity.id }
     );
-    if (user == null) {
+    if (user == undefined) {
       user = new User(request.representation.getJSON());
       try {
         user.save()
