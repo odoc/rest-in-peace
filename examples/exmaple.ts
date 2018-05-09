@@ -34,7 +34,7 @@ class UserRepresentation extends Representation {
     }
   }
 
-  // model -> represetnation transformation
+  // model -> representation transformation
   public static fromModel(user: User): UserRepresentation {
     return new UserRepresentation({
       name: user.name,

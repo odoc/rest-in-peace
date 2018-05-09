@@ -61,7 +61,7 @@ export abstract class Representation {
 
   public static parse(json: any): Representation {
     throw new Error(
-      `parse(json) not implemented in Represetnation ${this.name}`
+      `parse(json) not implemented in Representation class ${this.name}`
     );
   }
 

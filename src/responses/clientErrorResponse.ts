@@ -6,6 +6,7 @@ enum ClientErrorHttpStatusCode {
   Forbidden = 403,
   NotFound = 404,
   MethodNotAllowed = 405,
+  NotAcceptable = 406,
   Conflict = 409,
   UnsupportedMediaType = 415,
   UnprocessableEntity = 422
@@ -17,6 +18,7 @@ const ClientErrorMessages = new Map<number, string>([
   [ClientErrorHttpStatusCode.Forbidden, "Forbidden"],
   [ClientErrorHttpStatusCode.NotFound, "Not Found"],
   [ClientErrorHttpStatusCode.MethodNotAllowed, "Method Not Allowed"],
+  [ClientErrorHttpStatusCode.NotAcceptable, "Not Acceptable"],
   [ClientErrorHttpStatusCode.Conflict, "Conflict"],
   [ClientErrorHttpStatusCode.UnsupportedMediaType, "Unsupported Media Type"],
   [ClientErrorHttpStatusCode.UnprocessableEntity, "Unprocessable Entity"]
@@ -67,6 +69,13 @@ export class ClientErrorResponse extends ErrorResponse {
   public static methodNotAllowed() {
     return new ClientErrorResponse(
       ClientErrorHttpStatusCode.MethodNotAllowed
+    )
+  }
+
+  // Media-type on accept can't be served
+  public static notAcceptable() {
+    return new ClientErrorResponse(
+      ClientErrorHttpStatusCode.NotAcceptable
     )
   }
 

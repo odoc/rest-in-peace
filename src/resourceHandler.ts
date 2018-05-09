@@ -11,6 +11,9 @@ import { Identity } from './identity';
 import { ResourceAuthorizer } from './resourceAuthorizer'
 import { ResourceRequest, ResourceId } from './resourceRequest';
 import { Representation } from './representation';
+import { ResourceResponse } from './responses/resourceResponse';
+import { ServerErrorResponse } from './responses/serverErrorResponse';
+import { ClientErrorResponse } from './responses/clientErrorResponse';
 
 export enum Method {
   GET = "GET", // get a specific resource
@@ -34,8 +37,6 @@ export interface ResourceAccessInfo {
   isAuthenticated: boolean;
   supportedRoles: string[]
 }
-
-
 
 export abstract class ResourceHandler {
   private service: Service;
@@ -214,14 +215,12 @@ export abstract class ResourceHandler {
       (req: Request, res: Response) => {
         const method: string | undefined = req.query.method;
         if (method == undefined) {
-          const errorResponse = ErrorResourceResponse.notImplemented(method);
+          const errorResponse = ServerErrorResponse.notImplemented();
           errorResponse.send(res);
         } else {
           const authorizer = customAuthorizers.get(method);
           if (authorizer == undefined) {
-            const errorResponse = ErrorResourceResponse.notImplemented(
-              method
-            );
+            const errorResponse = ServerErrorResponse.notImplemented();
             errorResponse.send(res);
           } else {
             authorizer.handler(req, res);
@@ -242,9 +241,9 @@ export abstract class ResourceHandler {
 
     // Validate media types
     if (req.headers.accept != "application/json") {
-      response = ClientErrorResourceResponse.notAcceptable();
+      response = ClientErrorResponse.notAcceptable();
     } else if (req.headers["content-type"] != "application/json") {
-      response = ClienetErrorResourceResponse.unsupportedMediaType();
+      response = ClientErrorResponse.unsupportedMediaType();
     }
 
     const func = this.methodHandlers.get(method as Method);
@@ -262,12 +261,12 @@ export abstract class ResourceHandler {
 
     // recieved API version is not supposed
     if (representationClass == undefined) {
-      return Promise.resolve(ClienetErrorResponse.badRequest(
-        `version ${version} not supported anymore.`
+      return Promise.resolve(ClientErrorResponse.badRequest(
+        `version ${version} not supported.`
       ));
     }
 
-    // extract represetnation
+    // extract representation
     // req.body.data can be an array of representations
     // In such case there need to be additioanl req.body.isArray flag
     let representation: Representation | undefined;
@@ -277,13 +276,13 @@ export abstract class ResourceHandler {
     const isArray = req.body.isArray;
     if (method == Method.POST || method == Method.PUT) {
       if (data == null) {
-        return Promise.resolve(ClienetErrorResourceResponse.unprocessableEntity(
+        return Promise.resolve(ClientErrorResponse.unprocessableEnitity(
           "No represetnation."
         ));
       }
     }
     if (isArray == true && method != Method.POST) {
-      return Promise.resolve(ClienetErrorResourceResponse.unprocessableEntity(
+      return Promise.resolve(ClientErrorResponse.unprocessableEnitity(
         "Can't PUT an array of representations."
       ));
     }
@@ -300,7 +299,7 @@ export abstract class ResourceHandler {
           representation = representationClass.parse(data);
         }
       } catch (e) {
-        return Promise.resolve(ClientErrorResourceResponse.unprocessableEntity(
+        return Promise.resolve(ClientErrorResponse.unprocessableEnitity(
           e.message
         ))
       }
@@ -325,7 +324,7 @@ export abstract class ResourceHandler {
       }
     } catch (e) {
       return Promise.resolve(
-        ServerErrorResourceResponse.internalServerError(e.message)
+        ServerErrorResponse.internalServerError(e)
       )
     }
 

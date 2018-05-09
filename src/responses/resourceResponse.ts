@@ -1,3 +1,4 @@
+import { Response } from 'express';
 
 export abstract class ResourceResponse {
   private _statusCode: number;
@@ -11,5 +12,11 @@ export abstract class ResourceResponse {
   }
 
   public abstract getPayload(): any;
+
+  // send the HTTP response
+  public send(res: Response) {
+    res.status(this._statusCode);
+    res.send(this.getPayload());
+  }
 }
 

@@ -2,6 +2,8 @@ import { ResourceHandler, ResourceAccessInfo, Method } from "./resourceHandler";
 import { Request, Response } from 'express'
 import { Service } from './service';
 import { Identity } from "./identity";
+import { ClientErrorResponse } from "./responses/clientErrorResponse";
+import { ResourceResponse } from "./responses/resourceResponse";
 
 export class ResourceAuthorizer {
   public constructor(
@@ -25,9 +27,9 @@ export class ResourceAuthorizer {
         .getIdentity(
           request.headers.authorization
         );
-      let errorResponse: ErrorResourceResponse | undefined = undefined;
+      let errorResponse: ResourceResponse | undefined = undefined;
       if (identity == undefined) {
-        errorResponse = ErrorResourceResponse.unauthorized();
+        errorResponse = ClientErrorResponse.unauthorized();
       } else {
         const supportedRoles = this.accessInfo.supportedRoles;
         const roles = identity.sortedRoles;
@@ -53,7 +55,7 @@ export class ResourceAuthorizer {
           }
         }
         if (!found) {
-          errorResponse = ErrorResourceResponse.forbidden();
+          errorResponse = ClientErrorResponse.forbidden();
         }
       }
       if (errorResponse != undefined) {
