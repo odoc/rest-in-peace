@@ -1,5 +1,13 @@
 export { ServiceInterface as Service, createService } from './service';
 
-export { ResourceHandler } from './resourceHandler';
+export { ResourceHandler, Method } from './resourceHandler';
 
-//TODO export relavent classes - resouce handler, service, request classes, reposnes clases (not the super class), identity, auth handler
+export { ResourceRequest } from './resourceRequest';
+export { SuccessResponse } from './responses/successResponse';
+export { ClientErrorResponse } from './responses/clientErrorResponse';
+export { ServerErrorResponse } from './responses/serverErrorResponse';
+
+export { AuthHandler } from './authHandler';
+export { Identity } from './identity';
+
+export { Representation } from './representation';

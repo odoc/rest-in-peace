@@ -58,11 +58,7 @@ export class Resource {
   }
 }
 
-export interface ResourceRequestInterface {
-
-}
-
-export class ResourceRequest implements ResourceRequestInterface {
+export class ResourceRequest {
   private _params: any;
   private _query: any;
   private _version: number;

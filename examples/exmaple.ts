@@ -1,7 +1,4 @@
-import { Representation, Schema } from './../src/representation';
-import { ResourceHandler, Method } from './../src/resourceHandler';
-import { ResourceRequest } from '../src/resourceRequest';
-import { Service } from '../src/service'
+import { Representation, Schema, ResourceHandler, Method, ResourceRequest, Service, createService } from './../src/main';
 
 interface UserInterface {
   name: string,
