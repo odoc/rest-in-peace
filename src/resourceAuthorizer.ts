@@ -27,7 +27,7 @@ export class ResourceAuthorizer {
         );
       let errorResponse: ErrorResourceResponse | undefined = undefined;
       if (identity == undefined) {
-        errorResponse = ErrorResourceResponse.getUnauthenticated();
+        errorResponse = ErrorResourceResponse.unauthorized();
       } else {
         const supportedRoles = this.accessInfo.supportedRoles;
         const roles = identity.sortedRoles;
@@ -53,7 +53,7 @@ export class ResourceAuthorizer {
           }
         }
         if (!found) {
-          errorResponse = ErrorResourceResponse.getUnauthorized();
+          errorResponse = ErrorResourceResponse.forbidden();
         }
       }
       if (errorResponse != undefined) {

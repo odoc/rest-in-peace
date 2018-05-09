@@ -214,12 +214,12 @@ export abstract class ResourceHandler {
       (req: Request, res: Response) => {
         const method: string | undefined = req.query.method;
         if (method == undefined) {
-          const errorResponse = ErrorResourceResponse.getMethodNotImplemented(method);
+          const errorResponse = ErrorResourceResponse.notImplemented(method);
           errorResponse.send(res);
         } else {
           const authorizer = customAuthorizers.get(method);
           if (authorizer == undefined) {
-            const errorResponse = ErrorResourceResponse.getMethodNotImplemented(
+            const errorResponse = ErrorResourceResponse.notImplemented(
               method
             );
             errorResponse.send(res);
@@ -260,6 +260,13 @@ export abstract class ResourceHandler {
         get(version) as typeof Representation;;
     }
 
+    // recieved API version is not supposed
+    if (representationClass == undefined) {
+      return Promise.resolve(ClienetErrorResponse.badRequest(
+        `version ${version} not supported anymore.`
+      ));
+    }
+
     // extract represetnation
     // req.body.data can be an array of representations
     // In such case there need to be additioanl req.body.isArray flag
@@ -270,13 +277,13 @@ export abstract class ResourceHandler {
     const isArray = req.body.isArray;
     if (method == Method.POST || method == Method.PUT) {
       if (data == null) {
-        return Promise.resolve(ClienetErrorResourceResponse.unsupportedEntity(
+        return Promise.resolve(ClienetErrorResourceResponse.unprocessableEntity(
           "No represetnation."
         ));
       }
     }
     if (isArray == true && method != Method.POST) {
-      return Promise.resolve(ClienetErrorResourceResponse.unsupportedEntity(
+      return Promise.resolve(ClienetErrorResourceResponse.unprocessableEntity(
         "Can't PUT an array of representations."
       ));
     }
@@ -293,7 +300,7 @@ export abstract class ResourceHandler {
           representation = representationClass.parse(data);
         }
       } catch (e) {
-        return Promise.resolve(ClientErrorResourceResponse.unsupportedEntity(
+        return Promise.resolve(ClientErrorResourceResponse.unprocessableEntity(
           e.message
         ))
       }

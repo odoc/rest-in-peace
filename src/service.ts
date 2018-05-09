@@ -1,3 +1,5 @@
+//TODO for unhandled resource paths send 404 with json body.
+
 import { AuthHandler } from './authHandler';
 import { ResourceHandler } from './resourceHandler';
 import { Identity } from './identity';
@@ -44,6 +46,11 @@ export class Service implements ServiceInterface {
 
   public static getVersionParamId(): string {
     return VERSION_ID;
+  }
+
+  // TODO check environment variables
+  public static isDevelopment() {
+    return true;
   }
 
   constructor(
