@@ -14,7 +14,6 @@ import { Representation, validateSchema } from './representation';
 import { ResourceResponse } from './responses/resourceResponse';
 import { ServerErrorResponse } from './responses/serverErrorResponse';
 import { ClientErrorResponse } from './responses/clientErrorResponse';
-import { ErrorResponse } from './responses/errorResponse';
 
 export enum Method {
   GET = "GET", // get a specific resource
@@ -238,13 +237,18 @@ export abstract class ResourceHandler {
     res: Response,
     identity?: Identity
   ) {
-    let response: ResourceResponse;
+    let response: ResourceResponse | undefined;
 
     // Validate media types
     if (req.headers.accept != "application/json") {
       response = ClientErrorResponse.notAcceptable();
     } else if (req.headers["content-type"] != "application/json") {
       response = ClientErrorResponse.unsupportedMediaType();
+    }
+
+    if (response != undefined) {
+      response.send(res);
+      return;
     }
 
     const func = this.methodHandlers.get(method as Method);
@@ -262,9 +266,10 @@ export abstract class ResourceHandler {
 
     // recieved API version is not supposed
     if (representationClass == undefined) {
-      return Promise.resolve(ClientErrorResponse.badRequest(
+      response = ClientErrorResponse.badRequest(
         `version ${version} not supported.`
-      ));
+      );
+      response.send(res);
     }
     const validationSchema = representationClass.getValidataionSchema();
 
@@ -276,21 +281,18 @@ export abstract class ResourceHandler {
     // payload have a top level "data" key
     const data = req.body.data;
     const isArray = req.body.isArray;
-    if (method == Method.POST || method == Method.PUT) {
-      if (data == null) {
-        return Promise.resolve(ClientErrorResponse.unprocessableEnitity(
-          "No representation."
-        ));
-      }
-    }
+
+    // Array of representation is supported only with PoST
     if (isArray == true && method != Method.POST) {
-      return Promise.resolve(ClientErrorResponse.unprocessableEnitity(
-        "Can't PUT an array of representations."
-      ));
+      response = ClientErrorResponse.unprocessableEnitity(
+        "Can't accept an array of representations."
+      );
+      response.send(res);
     }
+
     if (data != null) {
       try {
-        if (isArray) {
+        if (isArray == true) {
           if (!Array.isArray(data)) {
             throw new Error("Not an array.");
           }
@@ -314,10 +316,19 @@ export abstract class ResourceHandler {
           representation = representationClass.parse(data);
         }
       } catch (e) {
-        return Promise.resolve(ClientErrorResponse.unprocessableEnitity(
+        response = ClientErrorResponse.unprocessableEnitity(
           e.message
-        ))
+        );
+        response.send(res);
       }
+    }
+
+    // Check whether PUT and POST have representations
+    if (representation == undefined && (
+      method == Method.PUT || method == Method.POST
+    )) {
+      response = ClientErrorResponse.badRequest("Missing representation");
+      response.send(res);
     }
 
     let request: ResourceRequest = new ResourceRequest(
@@ -329,7 +340,6 @@ export abstract class ResourceHandler {
       identity
     );
 
-    // TODO
     // Call the correct handler with the generated request
     try {
       if (func != undefined) {
@@ -338,13 +348,8 @@ export abstract class ResourceHandler {
         response = await this.onCustomMethod(method, request);
       }
     } catch (e) {
-      return Promise.resolve(
-        ServerErrorResponse.internalServerError(e)
-      )
-    }
-
-    if (method == Method.GET_ALL) {
-      // TODO check where reponse is an array of representations
+      response = ServerErrorResponse.internalServerError(e);
+      response.send(res);
     }
 
     response.send(res);

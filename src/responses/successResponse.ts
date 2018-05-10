@@ -40,9 +40,23 @@ export class SuccessResponse extends ResourceResponse {
   }
 
   public getPayload(): any {
+    let result: any;
+    if (this._isArray) {
+      result = []
+      if (this._representations != undefined) {
+        this._representations.forEach(rep => {
+          result.push(rep.getJSON());
+        });
+      }
+    } else {
+      result = undefined;
+      if (this._representation != undefined) {
+        result = this._representation.getJSON();
+      }
+    }
     return {
       isArray: this._isArray,
-      data: this._isArray ? this._representations : this._representation
+      data: result
     }
   }
 
