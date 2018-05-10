@@ -59,10 +59,8 @@ export class Resource {
 }
 
 export class ResourceRequest {
-  private _params: any;
   private _query: any;
   private _version: number;
-  private _request: Request;
   private _representation?: Representation;
   private _representations?: Representation[];
   private _identity?: Identity;
@@ -80,8 +78,6 @@ export class ResourceRequest {
     representation?: Representation | Representation[],
     identity?: Identity
   ) {
-    this._request = request;
-    this._params = request.params;
     this._query = request.query;
     this._version = version;
 

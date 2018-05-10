@@ -6,7 +6,7 @@ ResourceResponse implemntations
 */
 
 import { Service, ServiceInterface } from './service';
-import { Router, Express, Request, Response } from 'express';
+import { Router, Request, Response } from 'express';
 import { Identity } from './identity';
 import { ResourceAuthorizer } from './resourceAuthorizer'
 import { ResourceRequest, ResourceId } from './resourceRequest';
@@ -368,11 +368,16 @@ export abstract class ResourceHandler {
     version: number
   ): typeof Representation;
 
-  // TODO
-  // Posts can have a dedicated query key called "method". For each method we
-  // should be able to set representations separately. If client doesn't pass
-  // an ID then the method has to be create
+  // Posts have a dedicated query key called "method" which represents custom // methods where POST without "method" query means "create"
+
+  // For each custom method user should be able to set representations
+  // separately.
+  // If users doesn't provide custom class representations by overriding
+  // following method then default representaions are assumed based on the
+  // version
+
   protected getRepresentationClassForCustomMethod(
+    //@ts-ignore
     method: string,
     version: number
   ): typeof Representation {

@@ -18,13 +18,19 @@ export function createService(
   supportedVersions: number[],
   authHandler?: AuthHandler
 ): ServiceInterface {
-  return new Service(name, port, basePath, supportedVersions, authHandler);
+  const service: ServiceInterface = new Service(
+    name,
+    port,
+    basePath,
+    supportedVersions,
+    authHandler
+  );
+  return service;
 }
 
 const VERSION_ID = "version";
 
 export class Service implements ServiceInterface {
-  private name: string;
   private port: number;
   private basePath: string;
   private supportedVersions: number[];
@@ -53,13 +59,13 @@ export class Service implements ServiceInterface {
   }
 
   constructor(
+    //@ts-ignore
     name: string,
     port: number,
     basePath: string,
     supportedVersions: number[],
     authHandler?: AuthHandler) {
 
-    this.name = name;
     this.port = port;
     this.basePath = basePath;
     this.supportedVersions = supportedVersions;

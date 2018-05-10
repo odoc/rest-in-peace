@@ -59,7 +59,10 @@ function validateSchemaFunc(
 
 export abstract class Representation {
 
-  public static parse(json: any): Representation {
+  public static parse(
+    //@ts-ignore
+    json: any
+  ): Representation {
     throw new Error(
       `parse(json) not implemented in Representation class ${this.name}`
     );
@@ -70,7 +73,10 @@ export abstract class Representation {
     return undefined;
   }
 
-  public constructor(json: any) {
+  public constructor(
+    //@ts-ignore
+    json: any
+  ) {
   }
 
   // This doesn't have a default implementation because of robustness concerns.

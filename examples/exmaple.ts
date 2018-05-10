@@ -5,8 +5,8 @@ import {
   Method,
   ResourceRequest,
   Resource,
-  ResourceResponse,
   Service,
+  ResourceResponse,
   createService,
   SuccessResponse,
   ClientErrorResponse,
@@ -80,9 +80,15 @@ class User {
     return User.users.get(username);
   }
 
-  public static getAll(): User[] {
+  public static getAll(age?: number): User[] {
     let result: User[] = [];
-    User.users.forEach((user) => result.push(user));
+    User.users.forEach((user) => {
+      if (age == undefined) {
+        result.push(user)
+      } else if (user.age == age) {
+        result.push(user);
+      }
+    });
     return result;
   }
 }
@@ -163,6 +169,8 @@ class UsersResourceHandler extends ResourceHandler {
   }
 
   protected getRepresentationClass(version: number): typeof Representation {
+    //@ts-ignore
+    const _ = version
     return UserRepresentation;
   }
 
@@ -170,7 +178,13 @@ class UsersResourceHandler extends ResourceHandler {
     request: ResourceRequest
   ): Promise<ResourceResponse> {
     // only admin roles can access this.
-    const users: User[] = User.getAll();
+
+    // get age range
+    let age: number | undefined = parseInt(request.query.age);
+    if (isNaN(age)) {
+      age = undefined;
+    }
+    const users: User[] = User.getAll(age);
     let userReps: UserRepresentation[] = [];
     users.forEach((user) => {
       userReps.push(UserRepresentation.fromModel(user));
@@ -248,13 +262,16 @@ class UsersResourceHandler extends ResourceHandler {
   }
 
   protected async onDelete(
+    //@ts-ignore
     request: ResourceRequest
   ): Promise<ResourceResponse> {
     return Promise.resolve(ClientErrorResponse.methodNotAllowed());
   }
 
   protected async onCustomMethod(
+    //@ts-ignore
     method: string,
+    //@ts-ignore
     request: ResourceRequest
   ): Promise<ResourceResponse> {
     return Promise.resolve(ClientErrorResponse.methodNotAllowed());
@@ -268,7 +285,6 @@ class SimpleAuthhandler extends AuthHandler {
     if (token == "admin") {
       return Promise.resolve(new Identity("admin", "Admin", ["admin"]))
     }
-    const username = token;
     const user = User.get(token);
     if (user != undefined) {
       const roles = ["user"];
@@ -280,7 +296,7 @@ class SimpleAuthhandler extends AuthHandler {
 }
 
 const authHandler = new SimpleAuthhandler();
-let userService = createService(
+let userService: Service = createService(
   "UserService",
   8081,
   "/UserService",
@@ -289,6 +305,7 @@ let userService = createService(
 );
 
 
+//@ts-ignore
 const usersHandler = new UsersResourceHandler(userService);
 // const nestedBookHandler = new BooksResourceHandler(myService, usersHandler); // /usres/1/books/b1
 // const bookHandler = new BooksResourceHandler(myService); // /books/b1
