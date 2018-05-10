@@ -3,9 +3,11 @@
 import { AuthHandler } from './authHandler';
 import { ResourceHandler } from './resourceHandler';
 import { Identity } from './identity';
-import { Express, Router, } from 'express'
+import { Express, Router } from 'express'
 import express from 'express';
+import bodyParser from 'body-parser';
 import { Server } from 'http';
+import { ClientErrorResponse } from './responses/clientErrorResponse';
 
 export interface ServiceInterface {
   listen(callback?: Function): Server;
@@ -37,6 +39,7 @@ export class Service implements ServiceInterface {
   private authHandler?: AuthHandler;
 
   private app: Express;
+  private server?: Server;
   private serviceRouter: Router;
   private rootResourceHandlers: ResourceHandler[] = [];
 
@@ -75,11 +78,20 @@ export class Service implements ServiceInterface {
       throw new Error(`Port already taken: ${port}`);
     }
     this.app = express()
-    this.serviceRouter = express.Router();
+    this.serviceRouter = express.Router({ mergeParams: true });
     if (this.basePath[0] != '/') {
       this.basePath = `/${this.basePath}`;
     }
-    this.app.use(`/:${VERSION_ID}${this.basePath}`, this.serviceRouter);
+    this.app.use(bodyParser.json());
+    this.app.use(<any>((err: any, req: any, res: any, next: any) => {
+      if ((err instanceof SyntaxError)) {
+        const error = ClientErrorResponse.badRequest(err.message);
+        error.send(res);
+      } else {
+        next();
+      }
+    }));
+    this.app.use(`${this.basePath}/:${VERSION_ID}`, this.serviceRouter);
   }
 
   public registerRootResourceHandler(
@@ -103,8 +115,11 @@ export class Service implements ServiceInterface {
   }
 
   public listen(callback?: Function): Server {
-    const server = this.app.listen(this.port, callback);
-    return server;
+    if (this.server != undefined) {
+      throw new Error("Can't listen more than once");
+    }
+    this.server = this.app.listen(this.port, callback);
+    return this.server;
   }
 
   public getSupportedVersions(): number[] {

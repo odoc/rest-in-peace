@@ -34,9 +34,11 @@
   },
   "homepage": "https://github.com/github.com/rest-services#readme",
   "dependencies": {
+    "body-parser": "^1.18.2",
     "express": "^4.16.3"
   },
   "devDependencies": {
+    "@types/body-parser": "^1.17.0",
     "@types/express": "^4.11.1"
   }
 }
