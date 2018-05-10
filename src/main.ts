@@ -2,7 +2,8 @@ export { ServiceInterface as Service, createService } from './service';
 
 export { ResourceHandler, Method } from './resourceHandler';
 
-export { ResourceRequest } from './resourceRequest';
+export { ResourceRequest, Resource, ResourceId } from './resourceRequest';
+export { ResourceResponse } from './responses/resourceResponse';
 export { SuccessResponse } from './responses/successResponse';
 export { ClientErrorResponse } from './responses/clientErrorResponse';
 export { ServerErrorResponse } from './responses/serverErrorResponse';

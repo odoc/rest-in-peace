@@ -129,7 +129,7 @@ export class ResourceRequest {
     return this._representation;
   }
 
-  public get allRepresentation(): Representation[] | undefined {
+  public get allRepresentations(): Representation[] | undefined {
     return this._representations;
   }
 
