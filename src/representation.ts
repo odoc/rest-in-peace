@@ -66,7 +66,7 @@ export abstract class Representation {
   }
 
   // User can implement this if schema needs to be enforced
-  public static getSchema(): Schema | undefined {
+  public static getValidataionSchema(): Schema | undefined {
     return undefined;
   }
 

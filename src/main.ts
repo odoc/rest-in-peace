@@ -10,4 +10,4 @@ export { ServerErrorResponse } from './responses/serverErrorResponse';
 export { AuthHandler } from './authHandler';
 export { Identity } from './identity';
 
-export { Representation } from './representation';
+export { Representation, Schema } from './representation';

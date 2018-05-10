@@ -10,10 +10,11 @@ import { Router, Express, Request, Response } from 'express';
 import { Identity } from './identity';
 import { ResourceAuthorizer } from './resourceAuthorizer'
 import { ResourceRequest, ResourceId } from './resourceRequest';
-import { Representation } from './representation';
+import { Representation, validateSchema } from './representation';
 import { ResourceResponse } from './responses/resourceResponse';
 import { ServerErrorResponse } from './responses/serverErrorResponse';
 import { ClientErrorResponse } from './responses/clientErrorResponse';
+import { ErrorResponse } from './responses/errorResponse';
 
 export enum Method {
   GET = "GET", // get a specific resource
@@ -265,6 +266,7 @@ export abstract class ResourceHandler {
         `version ${version} not supported.`
       ));
     }
+    const validationSchema = representationClass.getValidataionSchema();
 
     // extract representation
     // req.body.data can be an array of representations
@@ -277,7 +279,7 @@ export abstract class ResourceHandler {
     if (method == Method.POST || method == Method.PUT) {
       if (data == null) {
         return Promise.resolve(ClientErrorResponse.unprocessableEnitity(
-          "No represetnation."
+          "No representation."
         ));
       }
     }
@@ -293,9 +295,22 @@ export abstract class ResourceHandler {
             throw new Error("Not an array.");
           }
           data.forEach((item) => {
+
+            if (validationSchema != undefined) {
+              let errorMessage = validateSchema(validationSchema, item);
+              if (errorMessage != undefined) {
+                throw new Error(errorMessage);
+              }
+            }
             representations.push(representationClass.parse(item));
           })
         } else {
+          if (validationSchema != undefined) {
+            let errorMessage = validateSchema(validationSchema, data);
+            if (errorMessage != undefined) {
+              throw new Error(errorMessage);
+            }
+          }
           representation = representationClass.parse(data);
         }
       } catch (e) {
