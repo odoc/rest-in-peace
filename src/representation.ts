@@ -35,7 +35,7 @@ function validateSchemaFunc(
         _schema: true,
         mandatory: def
       }
-    } else if (<boolean>def._schema != false) {
+    } else if (<boolean>def._schema != true) {
       const result = validateSchemaFunc(
         schema[key] as Schema,
         object[key],
@@ -49,8 +49,8 @@ function validateSchemaFunc(
     if (def.mandatory && object[key] == undefined) {
       return `Missing property ${jsonPath}.${key}`;
     }
-    if (def.type != undefined && def.type != typeof object[key]) {
-      return `Invalid type ${def.type} in ${jsonPath}.${key}`
+    if (object[key] != undefined && def.type != undefined && def.type != typeof object[key]) {
+      return `Invalid value for type ${def.type} in ${jsonPath}.${key}`
     }
   }
 

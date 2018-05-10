@@ -244,19 +244,24 @@ class UsersResourceHandler extends ResourceHandler {
   protected async onPost(
     request: ResourceRequest
   ): Promise<ResourceResponse> {
-    if (request.isArray) {
+    if (request.isArray()) {
+      let result: UserRepresentation[] = [];
       (<Representation[]>request.allRepresentations).forEach(rep => {
-        const user = new User(rep);
-        User.create(user);
+        const user = new User(rep.getJSON());
+        if (User.create(user)) {
+          result.push(rep as UserRepresentation);
+        }
       });
-      return Promise.resolve(SuccessResponse.OK(
-        true,
-        request.allRepresentations)
-      );
+      return Promise.resolve(SuccessResponse.OK(true, result));
     } else {
       const rep = request.representation;
-      const user = new User(rep);
-      User.create(user);
+      const user = new User((rep as Representation).getJSON());
+      const result = User.create(user);
+      if (!result) {
+        return Promise.resolve(ClientErrorResponse.conflict(
+          "username not available"
+        ));
+      }
       return Promise.resolve(SuccessResponse.OK(false, rep));
     }
   }

@@ -26,7 +26,7 @@ export enum Method {
 }
 
 const METHOD_HANDLERS = new Map<Method, string>([
-  [Method.GET, "onGetAll"],
+  [Method.GET, "onGet"],
   [Method.GET_ALL, "onGetAll"],
   [Method.PUT, "onPut"],
   [Method.POST, "onPost"],
@@ -66,15 +66,20 @@ export abstract class ResourceHandler {
     this.parseCustomMethods();
     this.parseAccessInfo();
 
+    this.router = Router({ mergeParams: true });
+
+    // if (parentHandler == undefined) {
+    //   this.router = Router();
+    // } else {
+    // }
+
     this.setupMethodHandlers();
     this.setupParentHandlers();
     this.setupRepresentationClasses();
 
     if (parentHandler == undefined) {
-      this.router = Router();
       this.service.registerRootResourceHandler(this, this.router);
     } else {
-      this.router = Router({ mergeParams: true });
       parentHandler.getRouter().use(
         `/:${parentHandler.getParamId()}/${this.getResourceIdentifierInPlural()}
         `,
@@ -252,7 +257,7 @@ export abstract class ResourceHandler {
     }
 
     const func = this.methodHandlers.get(method as Method);
-    const version = req.params[Service.getVersionParamId()];
+    const version = parseInt(req.params[Service.getVersionParamId()]);
     let representationClass: typeof Representation;
 
     // get the correct representation calss
@@ -270,6 +275,7 @@ export abstract class ResourceHandler {
         `version ${version} not supported.`
       );
       response.send(res);
+      return
     }
     const validationSchema = representationClass.getValidataionSchema();
 
@@ -279,8 +285,14 @@ export abstract class ResourceHandler {
     let representation: Representation | undefined;
     let representations: Representation[] = [];
     // payload have a top level "data" key
-    const data = req.body.data;
-    const isArray = req.body.isArray;
+    let data: any = undefined;
+    if (req.body != undefined) {
+      data = req.body.data;
+    }
+    let isArray = false;
+    if (req.body != undefined && req.body.isArray == true) {
+      isArray = true;
+    }
 
     // Array of representation is supported only with PoST
     if (isArray == true && method != Method.POST) {
@@ -288,6 +300,7 @@ export abstract class ResourceHandler {
         "Can't accept an array of representations."
       );
       response.send(res);
+      return
     }
 
     if (data != null) {
@@ -320,15 +333,19 @@ export abstract class ResourceHandler {
           e.message
         );
         response.send(res);
+        return;
       }
     }
 
     // Check whether PUT and POST have representations
-    if (representation == undefined && (
-      method == Method.PUT || method == Method.POST
+    if ((representation == undefined && method == Method.PUT) || (
+      representation == undefined &&
+      representations == undefined &&
+      method == Method.POST
     )) {
       response = ClientErrorResponse.badRequest("Missing representation");
       response.send(res);
+      return;
     }
 
     let request: ResourceRequest = new ResourceRequest(
@@ -349,7 +366,6 @@ export abstract class ResourceHandler {
       }
     } catch (e) {
       response = ServerErrorResponse.internalServerError(e);
-      response.send(res);
     }
 
     response.send(res);
