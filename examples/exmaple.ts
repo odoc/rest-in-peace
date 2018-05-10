@@ -10,7 +10,8 @@ import {
   createService,
   SuccessResponse,
   ClientErrorResponse,
-  Identity
+  Identity,
+  AuthHandler
 } from './../src/main';
 
 interface UserInterface {
@@ -251,6 +252,7 @@ class UsersResourceHandler extends ResourceHandler {
   ): Promise<ResourceResponse> {
     return Promise.resolve(ClientErrorResponse.methodNotAllowed());
   }
+
   protected async onCustomMethod(
     method: string,
     request: ResourceRequest
@@ -261,11 +263,34 @@ class UsersResourceHandler extends ResourceHandler {
 
 // TODO write auth hander to acccept token which is same as username
 
-const authHandler = MyServiceAuthHandler.getHandler()
-let myService = new Service("MyService", 8080, "/MyService", [1], authHandler)
+class SimpleAuthhandler extends AuthHandler {
+  public async authenticate(token: string): Promise<Identity | undefined> {
+    if (token == "admin") {
+      return Promise.resolve(new Identity("admin", "Admin", ["admin"]))
+    }
+    const username = token;
+    const user = User.get(token);
+    if (user != undefined) {
+      const roles = ["user"];
+      const idnetity = new Identity(user.username, user.name, roles);
+      return Promise.resolve(idnetity);
+    }
+    return;
+  }
+}
 
-const usersHandler = new UsersResourceHandler(myService);
-const nestedBookHandler = new BooksResourceHandler(myService, usersHandler); // /usres/1/books/b1
-const bookHandler = new BooksResourceHandler(myService); // /books/b1
+const authHandler = new SimpleAuthhandler();
+let userService = createService(
+  "UserService",
+  8081,
+  "/UserService",
+  [1],
+  authHandler
+);
 
-myService.listen();
+
+const usersHandler = new UsersResourceHandler(userService);
+// const nestedBookHandler = new BooksResourceHandler(myService, usersHandler); // /usres/1/books/b1
+// const bookHandler = new BooksResourceHandler(myService); // /books/b1
+
+userService.listen();

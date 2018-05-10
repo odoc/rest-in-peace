@@ -8,8 +8,7 @@ import express from 'express';
 import { Server } from 'http';
 
 export interface ServiceInterface {
-  listen(callback: Function): Server;
-
+  listen(callback?: Function): Server;
 }
 
 export function createService(

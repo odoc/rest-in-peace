@@ -6,11 +6,11 @@ export class Identity {
 
   public constructor(userId: string,
     name: string,
-    optionalSortedRoles: string[]
+    optionallySortedRoles: string[]
   ) {
     this._userId = userId;
     this._name = name;
-    this._roles = optionalSortedRoles;
+    this._roles = optionallySortedRoles;
   }
 
   private sortRoles() {
