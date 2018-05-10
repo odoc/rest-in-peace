@@ -19,16 +19,25 @@ export function validateSchema(
   return result;
 }
 
+function getPathString(parent: string, key: string) {
+  if (parent.length == 0) {
+    return key;
+  } else {
+    return `${parent}.${key}`;
+  }
+}
+
 function validateSchemaFunc(
   schema: Schema,
   object: any,
   jsonPath: string
 ): string | undefined {
   if (object == null) {
-    return "Invalid null object"
+    return `Invalid null object at path ${jsonPath}`
   }
 
   for (let key in schema) {
+    const keyPath = getPathString(jsonPath, key);
     let def = <SchemaObject>schema[key];
     if (typeof def == "boolean") {
       def = {
@@ -39,7 +48,7 @@ function validateSchemaFunc(
       const result = validateSchemaFunc(
         schema[key] as Schema,
         object[key],
-        `${jsonPath}.${key}`
+        `${keyPath}`
       );
       if (result != undefined) {
         return result;
@@ -47,10 +56,13 @@ function validateSchemaFunc(
     }
 
     if (def.mandatory && object[key] == undefined) {
-      return `Missing property ${jsonPath}.${key}`;
+      return `Missing property ${keyPath}`;
     }
-    if (object[key] != undefined && def.type != undefined && def.type != typeof object[key]) {
-      return `Invalid value for type ${def.type} in ${jsonPath}.${key}`
+    if (object[key] != undefined &&
+      def.type != undefined &&
+      def.type != typeof object[key]
+    ) {
+      return `Invalid value for type ${def.type} in ${keyPath} `
     }
   }
 
@@ -64,7 +76,8 @@ export abstract class Representation {
     json: any
   ): Representation {
     throw new Error(
-      `parse(json) not implemented in Representation class ${this.name}`
+      `parse(json) not implemented in Representation class $ {this.name
+    } `
     );
   }
 

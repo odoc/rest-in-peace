@@ -338,11 +338,16 @@ export abstract class ResourceHandler {
     }
 
     // Check whether PUT and POST have representations
-    if ((representation == undefined && method == Method.PUT) || (
-      representation == undefined &&
-      representations == undefined &&
-      method == Method.POST
-    )) {
+    if ((representation == undefined && method == Method.PUT) ||
+      (
+        representation == undefined &&
+        isArray == false &&
+        method == Method.POST) ||
+      ( // no array for post
+        isArray == true &&
+        data == null
+      )
+    ) {
       response = ClientErrorResponse.badRequest("Missing representation");
       response.send(res);
       return;
