@@ -14,12 +14,18 @@ import {
   AuthHandler
 } from './../src/main';
 
+interface CallEventInterface {
+  time: number,
+  duration: number
+}
+
 interface UserInterface {
   name: string,
   username: string,
   password?: string,
   address: any,
-  age: number
+  age: number,
+  callEvents: CallEventInterface[]
 }
 
 // User Model where we have the app logic
@@ -48,18 +54,45 @@ class Address {
     }
   }
 }
+
+class CallEvent {
+  public time: Date;
+  public duration: number;
+  public constructor(json: CallEventInterface) {
+    this.time = new Date(json.time);
+    this.duration = json.duration;
+  }
+}
 class User {
   public name: string;
   public username: string;
   public password: string;
   public address: Address;
   public age: number
+  public callEvents: CallEvent[];
   constructor(json: any) {
     this.name = json.name;
     this.username = json.username;
     this.password = json.password;
     this.address = new Address(json.address);
     this.age = json.age;
+    this.callEvents = [];
+  }
+
+  private setJSON(json: any) {
+    this.name = json.name;
+    this.username = json.username;
+    this.password = json.password;
+    this.address = new Address(json.address);
+    this.age = json.age;
+  }
+
+  public addCallEvent(event: CallEvent) {
+    this.callEvents.push(event);
+  }
+
+  public update(json: any) {
+    this.setJSON(json);
   }
 
   private static users = new Map<string, User>();
@@ -70,10 +103,6 @@ class User {
     }
     User.users.set(user.username, user);
     return true;
-  }
-
-  public static upsert(user: User) {
-    User.users.set(user.username, user);
   }
 
   public static get(username: string): User | undefined {
@@ -93,8 +122,33 @@ class User {
   }
 }
 
+class CallEventRepresentation extends Representation {
+  public static parse(json: any): CallEventRepresentation {
+    return new CallEventRepresentation(json);
+  }
+
+  public static getValidataionSchema(): Schema {
+    return {
+      time: { _schema: true, mandatory: true, type: "number" },
+      duration: { _schema: true, mandatory: true, type: "number" }
+    }
+  }
+
+  private json: CallEventInterface;
+
+  public constructor(json: CallEventInterface) {
+    super(json);
+    this.json = json;
+  }
+
+  public getJSON(): CallEventInterface {
+    return this.json;
+  }
+}
+
 class UserRepresentation extends Representation {
   public static parse(json: any): UserRepresentation {
+    json.callEvents = null; // PUT/POST can't have callEvents
     return new UserRepresentation(json);
   }
 
@@ -116,12 +170,18 @@ class UserRepresentation extends Representation {
 
   // model -> representation transformation
   public static fromModel(user: User): UserRepresentation {
+    let callEvents: CallEventInterface[] = [];
+    user.callEvents.forEach(event => callEvents.push({
+      time: event.time.getTime(),
+      duration: event.duration
+    }));
     return new UserRepresentation({
       name: user.name,
       username: user.username,
       // no password
       address: user.address.toJSON(), // taking to json of this is fine
-      age: user.age
+      age: user.age,
+      callEvents: callEvents
     });
   }
 
@@ -144,7 +204,6 @@ class UserRepresentation extends Representation {
     return this.json;
   }
 }
-
 
 class UsersResourceHandler extends ResourceHandler {
 
@@ -172,6 +231,19 @@ class UsersResourceHandler extends ResourceHandler {
     //@ts-ignore
     const _ = version
     return UserRepresentation;
+  }
+
+  protected getCustomMethods(): string[] {
+    return ["addCallEvent"];
+  }
+
+  protected getRepresentationClassForCustomMethod(
+    //@ts-ignore
+    method: string,
+    //@ts-ignore
+    version: number
+  ): typeof Representation {
+    return CallEventRepresentation;
   }
 
   protected async onGetAll(
@@ -236,9 +308,19 @@ class UsersResourceHandler extends ResourceHandler {
       return Promise.resolve(accessError);
     }
     let userRep = <UserRepresentation>request.representation;
-    let user = new User(userRep.getJSON());
-    User.upsert(user);
-    return Promise.resolve(SuccessResponse.OK(false, userRep))
+    if (resource.id.value != userRep.getJSON().username) {
+      return Promise.resolve(ClientErrorResponse.conflict("Invalid username"));
+    }
+    let user = User.get(resource.id.value);
+    if (user == undefined) {
+      user = new User(userRep.getJSON())
+      User.create(user);
+      return Promise.resolve(SuccessResponse.created(false,
+        UserRepresentation.fromModel(user)));
+    } else {
+      user.update(userRep.getJSON());
+      return Promise.resolve(SuccessResponse.OK(false, UserRepresentation.fromModel(user)))
+    }
   }
 
   protected async onPost(
@@ -249,10 +331,10 @@ class UsersResourceHandler extends ResourceHandler {
       (<Representation[]>request.allRepresentations).forEach(rep => {
         const user = new User(rep.getJSON());
         if (User.create(user)) {
-          result.push(rep as UserRepresentation);
+          result.push(UserRepresentation.fromModel(user));
         }
       });
-      return Promise.resolve(SuccessResponse.OK(true, result));
+      return Promise.resolve(SuccessResponse.created(true, result));
     } else {
       const rep = request.representation;
       const user = new User((rep as Representation).getJSON());
@@ -262,7 +344,10 @@ class UsersResourceHandler extends ResourceHandler {
           "username not available"
         ));
       }
-      return Promise.resolve(SuccessResponse.OK(false, rep));
+      return Promise.resolve(SuccessResponse.created(
+        false,
+        UserRepresentation.fromModel(user)
+      ));
     }
   }
 
@@ -279,7 +364,31 @@ class UsersResourceHandler extends ResourceHandler {
     //@ts-ignore
     request: ResourceRequest
   ): Promise<ResourceResponse> {
-    return Promise.resolve(ClientErrorResponse.methodNotAllowed());
+    if (method != "addCallEvent") {
+      return Promise.resolve(ClientErrorResponse.methodNotAllowed());
+    }
+
+    const resource = <Resource>request.getResource();
+    const accessError = this.checkResourceAccess(resource, request.identity);
+    if (accessError != undefined) {
+      return Promise.resolve(accessError);
+    }
+
+    // Get user account
+    const user = User.get(resource.id.value);
+    if (user == undefined) {
+      return Promise.resolve(ClientErrorResponse.notFound())
+    } else {
+      const callEventRep = request.representation as CallEventRepresentation;
+      if (callEventRep == undefined) {
+        return Promise.resolve(ClientErrorResponse.badRequest(
+          "Missing representation"
+        ));
+      }
+      user.addCallEvent(new CallEvent(callEventRep.getJSON()));
+      const userRep = UserRepresentation.fromModel(user);
+      return Promise.resolve(SuccessResponse.OK(false, userRep))
+    }
   }
 }
 
