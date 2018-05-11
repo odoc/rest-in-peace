@@ -83,7 +83,12 @@ export class Service implements ServiceInterface {
       this.basePath = `/${this.basePath}`;
     }
     this.app.use(bodyParser.json());
-    this.app.use(<any>((err: any, req: any, res: any, next: any) => {
+    this.app.use(<any>((err: any,
+      //@ts-ignore
+      req: any,
+      res: any,
+      next: any
+    ) => {
       if ((err instanceof SyntaxError)) {
         const error = ClientErrorResponse.badRequest(err.message);
         error.send(res);
