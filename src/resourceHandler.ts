@@ -430,8 +430,12 @@ export abstract class ResourceHandler {
   protected abstract async onDelete(
     request: ResourceRequest
   ): Promise<ResourceResponse>;
-  protected abstract async onCustomMethod(
+  protected async onCustomMethod(
+    //@ts-ignore
     method: string,
+    //@ts-ignore
     request: ResourceRequest
-  ): Promise<ResourceResponse>;
+  ): Promise<ResourceResponse> {
+    return Promise.resolve(ClientErrorResponse.methodNotAllowed());
+  }
 }
