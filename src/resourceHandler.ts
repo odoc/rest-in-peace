@@ -100,11 +100,25 @@ export abstract class ResourceHandler {
     return this.router;
   }
 
+  /** Sort and remove duplicate roles */
+  private processRoles(roles: string[]): string[] {
+    roles.sort();
+    let result = [];
+    let last = undefined;
+    for (const role of roles) {
+      if (role != last) {
+        result.push(role);
+      }
+      last = role;
+    }
+    return result;
+  }
+
   private parseAccessInfo() {
     this.allMethodNames.forEach((method: Method | string) => {
       this.accessInfo.set(method, {
         isAuthenticated: this.isAuthenticated(method),
-        supportedRoles: this.getAuthorizationRoles(method).sort()
+        supportedRoles: this.processRoles(this.getAuthorizationRoles(method))
       })
     });
   }
@@ -240,7 +254,8 @@ export abstract class ResourceHandler {
     method: Method | string,
     req: Request,
     res: Response,
-    identity?: Identity
+    identity: Identity | undefined,
+    matchingRoles: string[]
   ) {
     let response: ResourceResponse | undefined;
 
@@ -359,7 +374,8 @@ export abstract class ResourceHandler {
       this.allResourceIdClasses,
       version,
       isArray == true ? representations : representation,
-      identity
+      identity,
+      matchingRoles
     );
 
     // Call the correct handler with the generated request

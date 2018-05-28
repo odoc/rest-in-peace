@@ -12,7 +12,8 @@ export class ResourceAuthorizer {
       method: Method | string,
       request: Request,
       response: Response,
-      identity?: Identity
+      identity: Identity | undefined,
+      matchingRoles: string[]
     ) => void,
     private accessInfo: ResourceAccessInfo,
     private method: Method | string
@@ -22,6 +23,8 @@ export class ResourceAuthorizer {
 
   public async handler(request: Request, response: Response) {
     let identity: Identity | undefined = undefined;
+    let matchingRoles: string[] = [];
+
     if (this.accessInfo.isAuthenticated) {
       identity = await (<Service>this.resourceHandler.getService())
         .getIdentity(
@@ -34,13 +37,19 @@ export class ResourceAuthorizer {
         const supportedRoles = this.accessInfo.supportedRoles;
         const roles = identity.sortedRoles;
         // TODO search two sorted array for non-empty join
-        let found = false;
         if (supportedRoles.length > 0 && roles.length > 0) {
           let supportedPos = 0, rolesPos = 0;
           while (true) {
             if (supportedRoles[supportedPos] == roles[rolesPos]) {
-              found = true;
-              break;
+              matchingRoles.push(roles[rolesPos]);
+              supportedPos++;
+              rolesPos++;
+              if (
+                supportedPos == supportedRoles.length ||
+                rolesPos == roles.length
+              ) {
+                break;
+              }
             } else if (supportedRoles[supportedPos] < roles[rolesPos]) {
               supportedPos++;
               if (supportedPos == supportedRoles.length) {
@@ -54,7 +63,7 @@ export class ResourceAuthorizer {
             }
           }
         }
-        if (!found) {
+        if (matchingRoles.length == 0) {
           errorResponse = ClientErrorResponse.forbidden();
         }
       }
@@ -63,6 +72,11 @@ export class ResourceAuthorizer {
         return;
       }
     }
-    this.requestHandler(this.method, request, response, identity);
+    this.requestHandler(this.method,
+      request,
+      response,
+      identity,
+      matchingRoles
+    );
   }
 }

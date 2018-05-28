@@ -4,6 +4,19 @@ export class Identity {
   private _roles: string[];
   private didSortRoles: boolean = false;
 
+  public static hasRole(role: string, inRoles: string[]): boolean {
+    let l = 0, r = inRoles.length;
+    while (r - l > 1) {
+      let m = l + Math.floor((r - l) / 2);
+      if (role < inRoles[m]) {
+        r = m;
+      } else {
+        l = m;
+      }
+    }
+    return inRoles[l] == role;
+  }
+
   public constructor(userId: string,
     name: string,
     optionallySortedRoles: string[]
@@ -31,6 +44,17 @@ export class Identity {
       this._roles[j + 1] = curVal;
     }
 
+    // Make sure there are no duplicates
+    let tempArr: string[] = [];
+    let last: string | undefined = undefined;
+    for (const role of this._roles) {
+      if (role != last) {
+        tempArr.push(role);
+      }
+      last = role;
+    }
+    this._roles = tempArr;
+
     this.didSortRoles = true;
   }
 
@@ -47,5 +71,12 @@ export class Identity {
       this.sortRoles();
     }
     return this._roles;
+  }
+
+  public hasRole(role: string): boolean {
+    if (!this.didSortRoles) {
+      this.sortRoles();
+    }
+    return Identity.hasRole(role, this._roles);
   }
 }

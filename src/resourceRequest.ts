@@ -64,6 +64,7 @@ export class ResourceRequest {
   private _representation?: Representation;
   private _representations?: Representation[];
   private _identity?: Identity;
+  private _matchingRoles: string[];
   private _isArray = false;
 
   private resources = new Map<string, Resource>();
@@ -75,8 +76,9 @@ export class ResourceRequest {
     resourceHandlers: ResourceHandler[],
     resourceIdClasses: (typeof ResourceId)[],
     version: number,
-    representation?: Representation | Representation[],
-    identity?: Identity
+    representation: Representation | Representation[] | undefined,
+    identity: Identity | undefined,
+    matchingRoles: string[]
   ) {
     this._query = request.query;
     this._version = version;
@@ -88,6 +90,7 @@ export class ResourceRequest {
       this._representation = representation;
     }
     this._identity = identity;
+    this._matchingRoles = matchingRoles;
 
     //extract version
 
@@ -131,6 +134,10 @@ export class ResourceRequest {
 
   public get identity(): Identity | undefined {
     return this._identity;
+  }
+
+  public get matchingRoles(): string[] {
+    return this._matchingRoles;
   }
 
   public getResource(resourceIdentifier?: string): Resource | undefined {
