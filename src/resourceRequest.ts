@@ -26,7 +26,7 @@ export class ResourceId {
   private _value: string;
 
   public constructor(value: string) {
-    this._value = value;
+    this._value = decodeURIComponent(value);
   }
 
   public get value(): string {
@@ -140,11 +140,15 @@ export class ResourceRequest {
     return this._matchingRoles;
   }
 
-  public getResource(resourceIdentifier?: string): Resource | undefined {
+  public getResource(resourceIdentifier: string): Resource | undefined {
     if (resourceIdentifier == undefined) {
       return this.curResource;
     } else {
       return this.resources.get(resourceIdentifier)
     }
+  }
+
+  public get resource(): Resource {
+    return this.curResource;
   }
 }
