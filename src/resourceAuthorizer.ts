@@ -4,6 +4,7 @@ import { Service } from './service';
 import { Identity } from "./identity";
 import { ClientErrorResponse } from "./responses/clientErrorResponse";
 import { ResourceResponse } from "./responses/resourceResponse";
+import { ServerErrorResponse } from "./responses/serverErrorResponse";
 
 export class ResourceAuthorizer {
   public constructor(
@@ -26,13 +27,20 @@ export class ResourceAuthorizer {
     let matchingRoles: string[] = [];
 
     if (this.accessInfo.isAuthenticated) {
-      identity = await (<Service>this.resourceHandler.getService())
-        .getIdentity(
-          request.headers.authorization
-        );
       let errorResponse: ResourceResponse | undefined = undefined;
+
+      try {
+        identity = await (<Service>this.resourceHandler.getService())
+          .getIdentity(
+            request.headers.authorization
+          );
+      } catch (e) {
+        errorResponse = ServerErrorResponse.internalServerError(e);
+      }
       if (identity == undefined) {
-        errorResponse = ClientErrorResponse.unauthorized();
+        if (errorResponse == undefined) {
+          errorResponse = ClientErrorResponse.unauthorized();
+        }
       } else {
         const supportedRoles = this.accessInfo.supportedRoles;
         const roles = identity.sortedRoles;
