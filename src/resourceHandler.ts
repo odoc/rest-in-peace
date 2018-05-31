@@ -272,7 +272,14 @@ export abstract class ResourceHandler {
     }
 
     const func = this.methodHandlers.get(method as Method);
-    const version = parseInt(req.params[Service.getVersionParamId()]);
+    let verStr: string = req.params[Service.getVersionParamId()];
+    if (verStr.length > 0 && verStr.charAt(0).toLowerCase() == 'v') {
+      verStr = verStr.substr(1);
+    }
+    let version = parseInt(verStr);
+    if (isNaN(version)) {
+      version = 0;
+    }
     let representationClass: typeof Representation;
 
     // get the correct representation calss

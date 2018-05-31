@@ -8,9 +8,13 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import { Server } from 'http';
 import { ClientErrorResponse } from './responses/clientErrorResponse';
+import { AddressInfo } from 'net';
+
+const IS_DEV = process.env.NODE_ENV == 'development'
 
 export interface ServiceInterface {
   listen(callback?: Function): Server;
+  getBaseUrl(): string | undefined;
 }
 
 export function createService(
@@ -33,6 +37,7 @@ export function createService(
 const VERSION_ID = "version";
 
 export class Service implements ServiceInterface {
+  private name: string;
   private port: number;
   private basePath: string;
   private supportedVersions: number[];
@@ -58,7 +63,7 @@ export class Service implements ServiceInterface {
 
   // TODO check environment variables
   public static isDevelopment() {
-    return true;
+    return IS_DEV;
   }
 
   constructor(
@@ -69,9 +74,23 @@ export class Service implements ServiceInterface {
     supportedVersions: number[],
     authHandler?: AuthHandler) {
 
+    this.name = name;
     this.port = port;
     this.basePath = basePath;
-    this.supportedVersions = supportedVersions;
+    // Sort and remove duplicates in supported versions
+    supportedVersions.sort();
+    this.supportedVersions = [];
+    for (let i = 0, last = -1; i < supportedVersions.length; ++i) {
+      if (supportedVersions[i] != last) {
+        this.supportedVersions.push(supportedVersions[i]);
+      }
+      last = supportedVersions[i];
+    }
+    if (this.supportedVersions.length == 0 || this.supportedVersions[0] < 1) {
+      throw new Error(
+        `No or invalid supportedVersions in service ${this.name}`
+      );
+    }
     this.authHandler = authHandler;
 
     if (!Service.acquirePort(port)) {
@@ -129,5 +148,14 @@ export class Service implements ServiceInterface {
 
   public getSupportedVersions(): number[] {
     return this.supportedVersions;
+  }
+
+  public getBaseUrl(): string | undefined {
+    if (this.server == undefined) {
+      return undefined;
+    }
+    const address = this.server.address() as AddressInfo;
+    const version = this.supportedVersions[this.supportedVersions.length - 1];
+    return `${address.address}:${address.port}${this.basePath}/v${version}`;
   }
 }
