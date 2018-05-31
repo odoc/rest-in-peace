@@ -10,7 +10,7 @@ import { Router, Request, Response } from 'express';
 import { Identity } from './identity';
 import { ResourceAuthorizer } from './resourceAuthorizer'
 import { ResourceRequest, ResourceId } from './resourceRequest';
-import { Representation, validateSchema } from './representation';
+import { Representation } from './representation';
 import { ResourceResponse } from './responses/resourceResponse';
 import { ServerErrorResponse } from './responses/serverErrorResponse';
 import { ClientErrorResponse } from './responses/clientErrorResponse';
@@ -38,6 +38,11 @@ export interface ResourceAccessInfo {
   supportedRoles: string[]
 }
 
+export interface RepresentationPair {
+  request: typeof Representation,
+  response: typeof Representation
+}
+
 export abstract class ResourceHandler {
   private service: Service;
   private parentHandler?: ResourceHandler;
@@ -52,9 +57,9 @@ export abstract class ResourceHandler {
     (request: ResourceRequest) => Promise<ResourceResponse>>();
   private allResourceHandlers: ResourceHandler[] = [];
   private allResourceIdClasses: (typeof ResourceId)[] = [];
-  private representationClasses = new Map<number, typeof Representation>();
+  private representationClasses = new Map<number, RepresentationPair>();
   private customRepresentationClasses = new Map<Method | string,
-    Map<number, typeof Representation>>();
+    Map<number, RepresentationPair>>();
 
   public constructor(service: ServiceInterface, parentHandler?: ResourceHandler) {
     this.service = service as Service;
@@ -123,22 +128,51 @@ export abstract class ResourceHandler {
     });
   }
 
+  private parseRepresentationClasses(
+    repClasses: typeof Representation | RepresentationPair
+  ): RepresentationPair {
+    if (typeof repClasses == 'function') {
+      return {
+        request: repClasses,
+        response: repClasses
+      }
+    } else {
+      return repClasses;
+    }
+  }
+
   private setupRepresentationClasses() {
     this.service.getSupportedVersions().forEach((version) => {
-      this.representationClasses.set(
-        version,
-        this.getRepresentationClass(version)
-      );
+      const pair = this.parseRepresentationClasses(
+        this.getRepresentationClasses(version)
+      )
+      if (!pair.request.isRequestSetupDone) {
+        throw new Error(
+          `Representation ${pair.request.name} setupRequestParser()` +
+          `is not called`
+        );
+      }
+      this.representationClasses.set(version, pair);
       this.customMethodNames.forEach((method) => {
         let custom = this.customRepresentationClasses.get(method);
         if (custom == undefined) {
-          custom = new Map<number, typeof Representation>();
+          custom = new Map<number, RepresentationPair>();
           this.customRepresentationClasses.set(method, custom);
         }
-        custom.set(version, this.getRepresentationClassForCustomMethod(
-          method,
-          version
-        ));
+
+        const pair = this.parseRepresentationClasses(
+          this.getRepresentationClassesForCustomMethod(
+            method,
+            version
+          )
+        );
+        if (!pair.request.isRequestSetupDone) {
+          throw new Error(
+            `Representation ${pair.request.name} setupRequestParser()` +
+            `is not called`
+          );
+        }
+        custom.set(version, pair);
       })
     })
   }
@@ -280,26 +314,24 @@ export abstract class ResourceHandler {
     if (isNaN(version)) {
       version = 0;
     }
-    let representationClass: typeof Representation;
+    let representationPair: RepresentationPair | undefined;
 
     // get the correct representation calss
     if (func != undefined) { // in-build method
-      representationClass = this.representationClasses.get(version) as
-        typeof Representation;
+      representationPair = this.representationClasses.get(version);
     } else { // custom method
-      representationClass = (<any>this.customRepresentationClasses.get(method)).
-        get(version) as typeof Representation;;
+      representationPair = (<any>this.customRepresentationClasses.get(method)).
+        get(version);
     }
 
     // recieved API version is not supposed
-    if (representationClass == undefined) {
+    if (representationPair == undefined) {
       response = ClientErrorResponse.badRequest(
         `version ${version} not supported.`
       );
       response.send(res);
       return
     }
-    const validationSchema = representationClass.getValidataionSchema();
 
     // extract representation
     // req.body.data can be an array of representations
@@ -331,24 +363,11 @@ export abstract class ResourceHandler {
           if (!Array.isArray(data)) {
             throw new Error("Not an array.");
           }
-          data.forEach((item) => {
-
-            if (validationSchema != undefined) {
-              let errorMessage = validateSchema(validationSchema, item);
-              if (errorMessage != undefined) {
-                throw new Error(errorMessage);
-              }
-            }
-            representations.push(representationClass.parse(item));
-          })
-        } else {
-          if (validationSchema != undefined) {
-            let errorMessage = validateSchema(validationSchema, data);
-            if (errorMessage != undefined) {
-              throw new Error(errorMessage);
-            }
+          for (let item of data) {
+            representations.push(representationPair.request.parseRequest(item));
           }
-          representation = representationClass.parse(data);
+        } else {
+          representation = representationPair.request.parseRequest(data);
         }
       } catch (e) {
         response = ClientErrorResponse.unprocessableEnitity(
@@ -408,9 +427,9 @@ export abstract class ResourceHandler {
     return [];
   }
 
-  protected abstract getRepresentationClass(
+  protected abstract getRepresentationClasses(
     version: number
-  ): typeof Representation;
+  ): typeof Representation | RepresentationPair;
 
   // Posts have a dedicated query key called "method" which represents custom // methods where POST without "method" query means "create"
 
@@ -420,12 +439,12 @@ export abstract class ResourceHandler {
   // following method then default representaions are assumed based on the
   // version
 
-  protected getRepresentationClassForCustomMethod(
+  protected getRepresentationClassesForCustomMethod(
     //@ts-ignore
     method: string,
     version: number
-  ): typeof Representation {
-    return this.getRepresentationClass(version);
+  ): typeof Representation | RepresentationPair {
+    return this.getRepresentationClasses(version);
   }
 
   protected abstract isAuthenticated(

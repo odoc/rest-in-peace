@@ -11,7 +11,7 @@ export interface Schema {
   [property: string]: SchemaProperty | Schema;
 }
 
-export function validateSchema(
+function validateSchema(
   schema: Schema,
   object: any
 ): string | undefined {
@@ -70,20 +70,37 @@ function validateSchemaFunc(
 }
 
 export abstract class Representation {
+  private static requestSchema?: Schema;
+  private static requestParseFunc: (json: any) => Representation;
 
-  public static parse(
-    //@ts-ignore
-    json: any
-  ): Representation {
-    throw new Error(
-      `parse(json) not implemented in Representation class $ {this.name
-    } `
-    );
+  public static setupRequestParser(
+    representationClass: typeof Representation,
+    parseFunc: (json: any) => Representation,
+    validationSchema?: Schema
+  ) {
+    representationClass.requestParseFunc = parseFunc;
+    representationClass.requestSchema = validationSchema;
   }
 
-  // User can implement this if schema needs to be enforced
-  public static getValidataionSchema(): Schema | undefined {
-    return undefined;
+  public static parseRequest(
+    json: any
+  ): Representation {
+    if (this.requestSchema != undefined) {
+      const error = validateSchema(this.requestSchema, json);
+      if (error != undefined) {
+        throw new Error(error);
+      }
+    }
+    if (this.requestParseFunc == undefined) {
+      throw new Error(
+        `Representation.setRequestParser() is not called for ${this.name}`
+      );
+    }
+    return this.requestParseFunc(json)
+  }
+
+  public static get isRequestSetupDone(): boolean {
+    return this.requestParseFunc != undefined;
   }
 
   public constructor(

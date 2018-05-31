@@ -1,6 +1,5 @@
 import {
   Representation,
-  Schema,
   ResourceHandler,
   Method,
   ResourceRequest,
@@ -123,17 +122,6 @@ class User {
 }
 
 class CallEventRepresentation extends Representation {
-  public static parse(json: any): CallEventRepresentation {
-    return new CallEventRepresentation(json);
-  }
-
-  public static getValidataionSchema(): Schema {
-    return {
-      time: { _schema: true, mandatory: true, type: "number" },
-      duration: { _schema: true, mandatory: true, type: "number" }
-    }
-  }
-
   private json: CallEventInterface;
 
   public constructor(json: CallEventInterface) {
@@ -146,28 +134,17 @@ class CallEventRepresentation extends Representation {
   }
 }
 
+Representation.setupRequestParser(CallEventRepresentation,
+  (json: any): Representation => {
+    return new CallEventRepresentation(json);
+  },
+  {
+    time: { _schema: true, mandatory: true, type: "number" },
+    duration: { _schema: true, mandatory: true, type: "number" }
+  }
+)
+
 class UserRepresentation extends Representation {
-  public static parse(json: any): UserRepresentation {
-    json.callEvents = null; // PUT/POST can't have callEvents
-    return new UserRepresentation(json);
-  }
-
-  public static getValidataionSchema(): Schema {
-    return {
-      "name": { _schema: true, mandatory: true, type: "string" },
-      "username": { _schema: true, mandatory: true, type: "string" },
-      "password": { _schema: true, mandatory: true, type: "string" },
-      "address": {
-        "line1": true,
-        "line2": false,
-        "street": true,
-        "country": true,
-        "code": { _schema: true, mandatory: true, type: "number" }
-      },
-      "age": { _schema: true, mandatory: false, type: "number" }
-    }
-  }
-
   // model -> representation transformation
   public static fromModel(user: User): UserRepresentation {
     let callEvents: CallEventInterface[] = [];
@@ -205,6 +182,26 @@ class UserRepresentation extends Representation {
   }
 }
 
+Representation.setupRequestParser(UserRepresentation,
+  (json: any) => {
+    json.callEvents = null; // PUT/POST can't have callEvents
+    return new UserRepresentation(json);
+  },
+  {
+    "name": { _schema: true, mandatory: true, type: "string" },
+    "username": { _schema: true, mandatory: true, type: "string" },
+    "password": { _schema: true, mandatory: true, type: "string" },
+    "address": {
+      "line1": true,
+      "line2": false,
+      "street": true,
+      "country": true,
+      "code": { _schema: true, mandatory: true, type: "number" }
+    },
+    "age": { _schema: true, mandatory: false, type: "number" }
+  }
+)
+
 class UsersResourceHandler extends ResourceHandler {
 
   public getResourceIdentifierInPlural(): string {
@@ -227,7 +224,7 @@ class UsersResourceHandler extends ResourceHandler {
     }
   }
 
-  protected getRepresentationClass(version: number): typeof Representation {
+  protected getRepresentationClasses(version: number): typeof Representation {
     //@ts-ignore
     const _ = version
     return UserRepresentation;
@@ -237,7 +234,7 @@ class UsersResourceHandler extends ResourceHandler {
     return ["addCallEvent"];
   }
 
-  protected getRepresentationClassForCustomMethod(
+  protected getRepresentationClassesForCustomMethod(
     //@ts-ignore
     method: string,
     //@ts-ignore
