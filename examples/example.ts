@@ -281,7 +281,7 @@ class UsersResourceHandler extends ResourceHandler {
   protected async onGet(
     request: ResourceRequest
   ): Promise<ResourceResponse> {
-    const resource = <Resource>request.getResource();
+    const resource = <Resource>request.resource;
     const accessError = this.checkResourceAccess(resource, request.identity);
     if (accessError != undefined) {
       return Promise.resolve(accessError);
@@ -302,7 +302,7 @@ class UsersResourceHandler extends ResourceHandler {
     request: ResourceRequest
   ): Promise<ResourceResponse> {
 
-    const resource = <Resource>request.getResource();
+    const resource = <Resource>request.resource;
     const accessError = this.checkResourceAccess(resource, request.identity);
     if (accessError != undefined) {
       return Promise.resolve(accessError);
@@ -368,7 +368,7 @@ class UsersResourceHandler extends ResourceHandler {
       return Promise.resolve(ClientErrorResponse.methodNotAllowed());
     }
 
-    const resource = <Resource>request.getResource();
+    const resource = <Resource>request.resource;
     const accessError = this.checkResourceAccess(resource, request.identity);
     if (accessError != undefined) {
       return Promise.resolve(accessError);
