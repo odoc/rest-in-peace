@@ -1,11 +1,12 @@
 // This should better be abstract always, forcing developer to define messages.
-
+export type SchemaValue = string | number | boolean | Object;
 export type SchemaType = "string" | "number" | "boolean" | "object";
 export type SchemaProperty = boolean | SchemaObject
 export type SchemaObject = {
   _schema: true,
   mandatory: boolean,
-  type?: SchemaType;
+  type?: SchemaType,
+  whitelist?: SchemaValue[]
 }
 export interface Schema {
   [property: string]: SchemaProperty | Schema;
@@ -63,6 +64,18 @@ function validateSchemaFunc(
       def.type != typeof object[key]
     ) {
       return `Invalid value for type ${def.type} in ${keyPath} `
+    }
+    if (def.whitelist != undefined && Array.isArray(def.whitelist)) {
+      let found = false;
+      for (let value of def.whitelist) {
+        if (value == object[key]) {
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        return `Invalid value ${object[key]} for property ${keyPath}`;
+      }
     }
   }
 
