@@ -457,21 +457,36 @@ export abstract class ResourceHandler {
     return ResourceId;
   }
 
-  protected abstract async onGetAll(
+  protected async onGetAll(
+    //@ts-ignore
     request: ResourceRequest
-  ): Promise<ResourceResponse>;
-  protected abstract async onGet(
+  ): Promise<ResourceResponse> {
+    return Promise.resolve(ClientErrorResponse.methodNotAllowed());
+  }
+  protected async onGet(
+    //@ts-ignore
     request: ResourceRequest
-  ): Promise<ResourceResponse>;
-  protected abstract async onPut(
+  ): Promise<ResourceResponse> {
+    return Promise.resolve(ClientErrorResponse.methodNotAllowed());
+  }
+  protected async onPut(
+    //@ts-ignore
     request: ResourceRequest
-  ): Promise<ResourceResponse>;
-  protected abstract async onPost(
+  ): Promise<ResourceResponse> {
+    return Promise.resolve(ClientErrorResponse.methodNotAllowed());
+  }
+  protected async onPost(
+    //@ts-ignore
     request: ResourceRequest
-  ): Promise<ResourceResponse>;
-  protected abstract async onDelete(
+  ): Promise<ResourceResponse> {
+    return Promise.resolve(ClientErrorResponse.methodNotAllowed());
+  }
+  protected async onDelete(
+    //@ts-ignore
     request: ResourceRequest
-  ): Promise<ResourceResponse>;
+  ): Promise<ResourceResponse> {
+    return Promise.resolve(ClientErrorResponse.methodNotAllowed());
+  }
   protected async onCustomMethod(
     //@ts-ignore
     method: string,

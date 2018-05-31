@@ -1,6 +1,6 @@
 export { ServiceInterface as Service, createService } from './service';
 
-export { ResourceHandler, Method } from './resourceHandler';
+export { ResourceHandler, Method, RepresentationPair } from './resourceHandler';
 
 export { ResourceRequest, Resource, ResourceId } from './resourceRequest';
 export { ResourceResponse } from './responses/resourceResponse';
