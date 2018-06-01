@@ -35,6 +35,7 @@ export class ResourceAuthorizer {
             request.headers.authorization
           );
       } catch (e) {
+        console.error(e);
         errorResponse = ServerErrorResponse.internalServerError(e);
       }
       if (identity == undefined) {

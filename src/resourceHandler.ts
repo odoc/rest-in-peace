@@ -424,6 +424,7 @@ export abstract class ResourceHandler {
         );
       }
     } catch (e) {
+      console.error(e);
       response = ServerErrorResponse.internalServerError(e);
     }
 
