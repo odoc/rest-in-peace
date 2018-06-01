@@ -14,6 +14,7 @@ import { Representation } from './representation';
 import { ResourceResponse } from './responses/resourceResponse';
 import { ServerErrorResponse } from './responses/serverErrorResponse';
 import { ClientErrorResponse } from './responses/clientErrorResponse';
+import { SuccessResponse } from './main';
 
 export enum Method {
   GET = "GET", // get a specific resource
@@ -39,8 +40,8 @@ export interface ResourceAccessInfo {
 }
 
 export interface RepresentationPair {
-  request: typeof Representation,
-  response: typeof Representation
+  request?: typeof Representation;
+  response?: typeof Representation;
 }
 
 export abstract class ResourceHandler {
@@ -146,7 +147,7 @@ export abstract class ResourceHandler {
       const pair = this.parseRepresentationClasses(
         this.getRepresentationClasses(version)
       )
-      if (!pair.request.isRequestSetupDone) {
+      if (pair.request != undefined && !pair.request.isRequestSetupDone) {
         throw new Error(
           `Representation ${pair.request.name} setupRequestParser()` +
           `is not called`
@@ -166,7 +167,7 @@ export abstract class ResourceHandler {
             version
           )
         );
-        if (!pair.request.isRequestSetupDone) {
+        if (pair.request != undefined && !pair.request.isRequestSetupDone) {
           throw new Error(
             `Representation ${pair.request.name} setupRequestParser()` +
             `is not called`
@@ -363,11 +364,15 @@ export abstract class ResourceHandler {
           if (!Array.isArray(data)) {
             throw new Error("Not an array.");
           }
-          for (let item of data) {
-            representations.push(representationPair.request.parseRequest(item));
+          if (representationPair.request != undefined) {
+            for (let item of data) {
+              representations.push(representationPair.request.parseRequest(item));
+            }
           }
         } else {
-          representation = representationPair.request.parseRequest(data);
+          if (representationPair.request != undefined) {
+            representation = representationPair.request.parseRequest(data);
+          }
         }
       } catch (e) {
         response = ClientErrorResponse.unprocessableEnitity(
@@ -379,19 +384,21 @@ export abstract class ResourceHandler {
     }
 
     // Check whether PUT and POST have representations
-    if ((representation == undefined && method == Method.PUT) ||
-      (
-        representation == undefined &&
-        isArray == false &&
-        method == Method.POST) ||
-      ( // no array for post
-        isArray == true &&
-        data == null
-      )
-    ) {
-      response = ClientErrorResponse.badRequest("Missing representation");
-      response.send(res);
-      return;
+    if (representationPair.request != undefined) {
+      if ((representation == undefined && method == Method.PUT) ||
+        (
+          representation == undefined &&
+          isArray == false &&
+          method == Method.POST) ||
+        ( // no array for post
+          isArray == true &&
+          data == null
+        )
+      ) {
+        response = ClientErrorResponse.badRequest("Missing representation");
+        response.send(res);
+        return;
+      }
     }
 
     let request: ResourceRequest = new ResourceRequest(
@@ -410,6 +417,11 @@ export abstract class ResourceHandler {
         response = await func(request);
       } else {
         response = await this.onCustomMethod(method, request);
+      }
+      if (response instanceof SuccessResponse) {
+        response.checkRepresentation(
+          representationPair.response
+        );
       }
     } catch (e) {
       response = ServerErrorResponse.internalServerError(e);

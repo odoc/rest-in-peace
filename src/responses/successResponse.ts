@@ -60,9 +60,45 @@ export class SuccessResponse extends ResourceResponse {
     }
   }
 
+  public checkRepresentation(repClass: undefined | any) {//typeof Representatio
+    if (this._isArray) {
+      if (this._representations == undefined && repClass != undefined) {
+        throw new Error(`No representations of type ${repClass.name}`)
+      } else if (this._representations != undefined) {
+        if (repClass != undefined) {
+          for (const rep of this._representations) {
+            if (!(rep instanceof repClass)) {
+              throw new Error(
+                `Invalid representation ${rep.getJSON()} when required ` +
+                `representation is ${(<typeof Representation>repClass).name}`
+              );
+            }
+          }
+        } else if (this._representations.length > 0) {
+          throw new Error(`Invalid representaions when there shouldn't be any.`)
+        }
+      }
+    } else {
+      if (this._representation == undefined && repClass != undefined) {
+        throw new Error(`No representation of type ${repClass.name}`);
+      } if (this._representation != undefined) {
+        if (repClass != undefined &&
+          !(this._representation instanceof repClass)
+        ) {
+          throw new Error(
+            `Invalid representation ${this._representation.getJSON()} when ` +
+            `required representation is ${(<typeof Representation>repClass).name}`
+          );
+        } else if (repClass == undefined) {
+          throw new Error(`Invalid representaion when there shouldn't be one.`)
+        }
+      }
+    }
+  }
+
   public static OK(
     isArray: boolean,
-    representations?: Representation | Representation[]
+    representations: Representation | Representation[]
   ): SuccessResponse {
     return new SuccessResponse(
       SuccessHttpStatusCode.OK,
