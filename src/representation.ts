@@ -63,7 +63,7 @@ function validateSchemaFunc(
       def.type != undefined &&
       def.type != typeof object[key]
     ) {
-      return `Invalid value for type ${def.type} in ${keyPath} `
+      return `Invalid value for type ${def.type} in ${keyPath}`
     }
     if (def.whitelist != undefined && Array.isArray(def.whitelist)) {
       let found = false;
@@ -74,7 +74,8 @@ function validateSchemaFunc(
         }
       }
       if (!found) {
-        return `Invalid value ${object[key]} for property ${keyPath}`;
+        return `Invalid value ${object[key]} for property ${keyPath}. ` +
+          `Possible values are: ${def.whitelist.join(',')}`
       }
     }
   }
