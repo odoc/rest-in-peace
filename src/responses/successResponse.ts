@@ -2,7 +2,7 @@
 import { ResourceResponse } from './resourceResponse';
 import { Representation } from './../representation';
 
-enum SuccessHttpStatusCode {
+export enum SuccessHttpStatusCode {
   OK = 200,
   Created = 201,
   NoContent = 204,

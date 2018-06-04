@@ -1,7 +1,7 @@
 import { ErrorResponse } from './errorResponse';
 import { Service } from './../service';
 
-enum ServerErrorHttpStatusCode {
+export enum ServerErrorHttpStatusCode {
   InternalServerError = 500,
   NotImplemented = 501,
   BadGateway = 502

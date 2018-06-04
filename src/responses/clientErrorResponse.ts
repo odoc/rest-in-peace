@@ -1,6 +1,6 @@
 import { ErrorResponse } from './errorResponse';
 
-enum ClientErrorHttpStatusCode {
+export enum ClientErrorHttpStatusCode {
   BadRequest = 400,
   Unauthorized = 401,
   Forbidden = 403,
