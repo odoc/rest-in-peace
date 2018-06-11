@@ -36,7 +36,7 @@ export class ResourceAuthorizer {
           );
       } catch (e) {
         console.error(e);
-        errorResponse = ServerErrorResponse.internalServerError(e);
+        errorResponse = ServerErrorResponse.badGateway(e);
       }
       if (identity == undefined) {
         if (errorResponse == undefined) {
