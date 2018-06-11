@@ -96,6 +96,11 @@ export class SuccessResponse extends ResourceResponse {
     }
   }
 
+  /**
+   * Should be used to show exisiting representations
+   * @param isArray Whether this is a list of representations
+   * @param representations Representation object or array of representations
+   */
   public static OK(
     isArray: boolean,
     representations: Representation | Representation[]
@@ -107,6 +112,11 @@ export class SuccessResponse extends ResourceResponse {
     );
   }
 
+  /**
+   * Should be used when creating a resource
+   * @param isArray Whether this is a list of representations
+   * @param representations Representation object or array of representations
+   */
   public static created(
     isArray: boolean,
     representations: Representation | Representation[]
@@ -118,6 +128,9 @@ export class SuccessResponse extends ResourceResponse {
     )
   }
 
+  /**
+   * When no data in the response
+   */
   public static noCotent(): SuccessResponse {
     return new SuccessResponse(
       SuccessHttpStatusCode.NoContent,

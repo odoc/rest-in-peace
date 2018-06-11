@@ -39,7 +39,9 @@ export class ServerErrorResponse extends ErrorResponse {
     }
   }
 
-  // exception in server
+  /**
+   * Exception in server
+   */
   public static internalServerError(error: Error) {
     return new ServerErrorResponse(
       ServerErrorHttpStatusCode.InternalServerError,
@@ -48,17 +50,31 @@ export class ServerErrorResponse extends ErrorResponse {
     );
   }
 
-  // any custom method that server doesn't implements
+  /**
+   * Any custom method that server doesn't implements
+   */
   public static notImplemented() {
     return new ServerErrorResponse(
       ServerErrorHttpStatusCode.NotImplemented
     );
   }
 
-  public static badGateway(errorMessage?: string) {
-    return new ServerErrorResponse(
-      ServerErrorHttpStatusCode.BadGateway,
-      errorMessage
-    );
+  /**
+   * The server, while acting as a gateway or proxy, received an invalid
+   * response from the upstream server.
+   */
+  public static badGateway(error?: string | Error) {
+    if (error == undefined || typeof error == 'string') {
+      return new ServerErrorResponse(
+        ServerErrorHttpStatusCode.BadGateway,
+        error
+      );
+    } else {
+      return new ServerErrorResponse(
+        ServerErrorHttpStatusCode.BadGateway,
+        error.message,
+        error.stack
+      );
+    }
   }
 }

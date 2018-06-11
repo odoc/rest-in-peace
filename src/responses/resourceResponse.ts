@@ -13,7 +13,9 @@ export abstract class ResourceResponse {
 
   public abstract getPayload(): any;
 
-  // send the HTTP response
+  /**
+   * Send the HTTP response
+   */
   public send(res: Response) {
     res.status(this._statusCode);
     res.send(this.getPayload());

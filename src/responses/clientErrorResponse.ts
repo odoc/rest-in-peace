@@ -36,7 +36,9 @@ export class ClientErrorResponse extends ErrorResponse {
     super(statusCode, errorMessage);
   }
 
-  // general bad request, not symantic or syntax error
+  /**
+   * General bad request, not symantic or syntax error
+   */
   public static badRequest(errorMessage?: string) {
     return new ClientErrorResponse(
       ClientErrorHttpStatusCode.BadRequest,
@@ -44,43 +46,54 @@ export class ClientErrorResponse extends ErrorResponse {
     )
   }
 
-  // client must authenticate. Authorization is covered by Forbidden
+  /**
+   *  Client must authenticate. Authorization is covered by Forbidden
+   */
   public static unauthorized() {
     return new ClientErrorResponse(
       ClientErrorHttpStatusCode.Unauthorized
     )
   }
 
-  // unauthorized to access the given method.
+  /**
+   * Unauthorized to access the given method.
+   */
   public static forbidden() {
     return new ClientErrorResponse(
       ClientErrorHttpStatusCode.Forbidden
     )
   }
 
-  // resource couldn't be found or not authoized
+  /**
+   *  Resource couldn't be found or not authoized
+   */
   public static notFound() {
     return new ClientErrorResponse(
       ClientErrorHttpStatusCode.NotFound
     )
   }
 
-  // When one of the GET, GET_ALL, POST, PUT, POST not implemented.
+  /**
+   * When one of the GET, GET_ALL, POST, PUT, POST not implemented
+   */
   public static methodNotAllowed() {
     return new ClientErrorResponse(
       ClientErrorHttpStatusCode.MethodNotAllowed
     )
   }
 
-  // Media-type on accept can't be served
+  /**
+   * Media-type on accept can't be served
+   */
   public static notAcceptable() {
     return new ClientErrorResponse(
       ClientErrorHttpStatusCode.NotAcceptable
     )
   }
 
-  // request conflicts with the current state of the server.
-
+  /**
+   * Request conflicts with the current state of the server.
+   */
   public static conflict(errorMessage?: string) {
     return new ClientErrorResponse(
       ClientErrorHttpStatusCode.Conflict,
@@ -88,13 +101,18 @@ export class ClientErrorResponse extends ErrorResponse {
     )
   }
 
+  /**
+   * Content-type is not supported. Should be application/json
+   */
   public static unsupportedMediaType() {
     return new ClientErrorResponse(
       ClientErrorHttpStatusCode.UnsupportedMediaType
     )
   }
 
-  // folllows content-type but sematics are invalid - i.e. schema issue
+  /**
+   * Folllows content-type but sematics are invalid - i.e. schema issue
+   */
   public static unprocessableEnitity(errorMessage?: string) {
     return new ClientErrorResponse(
       ClientErrorHttpStatusCode.UnprocessableEntity,
