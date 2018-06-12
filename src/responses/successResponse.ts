@@ -12,11 +12,13 @@ export class SuccessResponse extends ResourceResponse {
   private _isArray: boolean;
   private _representation?: Representation;
   private _representations?: Representation[];
+  private _errorMessage?: string;
 
   private constructor(
     statusCode: number,
     isArray: boolean,
-    representations?: Representation | Representation[]
+    representations?: Representation | Representation[],
+    errorMessage?: string
   ) {
     super(statusCode);
     this._isArray = isArray;
@@ -25,6 +27,7 @@ export class SuccessResponse extends ResourceResponse {
     } else {
       this._representation = representations as Representation;
     }
+    this._errorMessage = errorMessage;
   }
 
   public isArray(): boolean {
@@ -56,7 +59,10 @@ export class SuccessResponse extends ResourceResponse {
     }
     return {
       isArray: this._isArray,
-      data: result
+      data: result,
+      error: this._errorMessage == undefined ? undefined : {
+        message: this._errorMessage
+      }
     }
   }
 
@@ -119,12 +125,14 @@ export class SuccessResponse extends ResourceResponse {
    */
   public static created(
     isArray: boolean,
-    representations: Representation | Representation[]
+    representations: Representation | Representation[],
+    errorMessage?: string
   ): SuccessResponse {
     return new SuccessResponse(
       SuccessHttpStatusCode.Created,
       isArray,
-      representations
+      representations,
+      errorMessage
     )
   }
 
