@@ -87,8 +87,8 @@ export abstract class ResourceHandler {
       this.service.registerRootResourceHandler(this, this.router);
     } else {
       parentHandler.getRouter().use(
-        `/:${parentHandler.getParamId()}/${this.getResourceIdentifierInPlural()}
-        `,
+        `/:${parentHandler.getParamId()}` +
+        `/${this.getResourceIdentifierInPlural()}`,
         this.router
       )
     }
