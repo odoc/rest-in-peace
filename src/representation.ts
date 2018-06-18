@@ -8,6 +8,8 @@ export type SchemaObject = {
   type?: SchemaType,
   whitelist?: SchemaValue[]
 }
+
+// TODO having object propery names like type is not going to work with this.
 export interface Schema {
   [property: string]: SchemaProperty | Schema;
 }
@@ -54,6 +56,7 @@ function validateSchemaFunc(
       if (result != undefined) {
         return result;
       }
+      continue;
     }
 
     if (def.mandatory && object[key] == undefined) {
