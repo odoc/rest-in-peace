@@ -351,7 +351,7 @@ export abstract class ResourceHandler {
 
     // Array of representation is supported only with PoST
     if (isArray == true && method != Method.POST) {
-      response = ClientErrorResponse.unprocessableEnitity(
+      response = ClientErrorResponse.unprocessableEntity(
         "Can't accept an array of representations."
       );
       response.send(res);
@@ -375,7 +375,7 @@ export abstract class ResourceHandler {
           }
         }
       } catch (e) {
-        response = ClientErrorResponse.unprocessableEnitity(
+        response = ClientErrorResponse.unprocessableEntity(
           e.message
         );
         response.send(res);

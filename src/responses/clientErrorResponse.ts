@@ -1,27 +1,27 @@
 import { ErrorResponse } from './errorResponse';
 
 export enum ClientErrorHttpStatusCode {
-  BadRequest = 400,
-  Unauthorized = 401,
-  Forbidden = 403,
-  NotFound = 404,
-  MethodNotAllowed = 405,
-  NotAcceptable = 406,
-  Conflict = 409,
-  UnsupportedMediaType = 415,
-  UnprocessableEntity = 422
+  badRequest = 400,
+  unauthorized = 401,
+  forbidden = 403,
+  notFound = 404,
+  methodNotAllowed = 405,
+  notAcceptable = 406,
+  conflict = 409,
+  unsupportedMediaType = 415,
+  unprocessableEntity = 422
 }
 
 const ClientErrorMessages = new Map<number, string>([
-  [ClientErrorHttpStatusCode.BadRequest, "Bad Request"],
-  [ClientErrorHttpStatusCode.Unauthorized, "Unauthorized"],
-  [ClientErrorHttpStatusCode.Forbidden, "Forbidden"],
-  [ClientErrorHttpStatusCode.NotFound, "Not Found"],
-  [ClientErrorHttpStatusCode.MethodNotAllowed, "Method Not Allowed"],
-  [ClientErrorHttpStatusCode.NotAcceptable, "Not Acceptable"],
-  [ClientErrorHttpStatusCode.Conflict, "Conflict"],
-  [ClientErrorHttpStatusCode.UnsupportedMediaType, "Unsupported Media Type"],
-  [ClientErrorHttpStatusCode.UnprocessableEntity, "Unprocessable Entity"]
+  [ClientErrorHttpStatusCode.badRequest, "Bad Request"],
+  [ClientErrorHttpStatusCode.unauthorized, "Unauthorized"],
+  [ClientErrorHttpStatusCode.forbidden, "Forbidden"],
+  [ClientErrorHttpStatusCode.notFound, "Not Found"],
+  [ClientErrorHttpStatusCode.methodNotAllowed, "Method Not Allowed"],
+  [ClientErrorHttpStatusCode.notAcceptable, "Not Acceptable"],
+  [ClientErrorHttpStatusCode.conflict, "Conflict"],
+  [ClientErrorHttpStatusCode.unsupportedMediaType, "Unsupported Media Type"],
+  [ClientErrorHttpStatusCode.unprocessableEntity, "Unprocessable Entity"]
 ]);
 
 export class ClientErrorResponse extends ErrorResponse {
@@ -41,7 +41,7 @@ export class ClientErrorResponse extends ErrorResponse {
    */
   public static badRequest(errorMessage?: string) {
     return new ClientErrorResponse(
-      ClientErrorHttpStatusCode.BadRequest,
+      ClientErrorHttpStatusCode.badRequest,
       errorMessage
     )
   }
@@ -51,7 +51,7 @@ export class ClientErrorResponse extends ErrorResponse {
    */
   public static unauthorized() {
     return new ClientErrorResponse(
-      ClientErrorHttpStatusCode.Unauthorized
+      ClientErrorHttpStatusCode.unauthorized
     )
   }
 
@@ -60,7 +60,7 @@ export class ClientErrorResponse extends ErrorResponse {
    */
   public static forbidden() {
     return new ClientErrorResponse(
-      ClientErrorHttpStatusCode.Forbidden
+      ClientErrorHttpStatusCode.forbidden
     )
   }
 
@@ -69,7 +69,7 @@ export class ClientErrorResponse extends ErrorResponse {
    */
   public static notFound() {
     return new ClientErrorResponse(
-      ClientErrorHttpStatusCode.NotFound
+      ClientErrorHttpStatusCode.notFound
     )
   }
 
@@ -78,7 +78,7 @@ export class ClientErrorResponse extends ErrorResponse {
    */
   public static methodNotAllowed() {
     return new ClientErrorResponse(
-      ClientErrorHttpStatusCode.MethodNotAllowed
+      ClientErrorHttpStatusCode.methodNotAllowed
     )
   }
 
@@ -87,7 +87,7 @@ export class ClientErrorResponse extends ErrorResponse {
    */
   public static notAcceptable() {
     return new ClientErrorResponse(
-      ClientErrorHttpStatusCode.NotAcceptable
+      ClientErrorHttpStatusCode.notAcceptable
     )
   }
 
@@ -96,7 +96,7 @@ export class ClientErrorResponse extends ErrorResponse {
    */
   public static conflict(errorMessage?: string) {
     return new ClientErrorResponse(
-      ClientErrorHttpStatusCode.Conflict,
+      ClientErrorHttpStatusCode.conflict,
       errorMessage
     )
   }
@@ -106,16 +106,16 @@ export class ClientErrorResponse extends ErrorResponse {
    */
   public static unsupportedMediaType() {
     return new ClientErrorResponse(
-      ClientErrorHttpStatusCode.UnsupportedMediaType
+      ClientErrorHttpStatusCode.unsupportedMediaType
     )
   }
 
   /**
    * Folllows content-type but sematics are invalid - i.e. schema issue
    */
-  public static unprocessableEnitity(errorMessage?: string) {
+  public static unprocessableEntity(errorMessage?: string) {
     return new ClientErrorResponse(
-      ClientErrorHttpStatusCode.UnprocessableEntity,
+      ClientErrorHttpStatusCode.unprocessableEntity,
       errorMessage
     )
   }
