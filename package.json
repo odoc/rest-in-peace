@@ -1,6 +1,6 @@
 {
   "name": "rest-services",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "REST services framework that enforces the service developers to follow REST like patterns. ",
   "main": "dist/src/main.js",
   "typings": "dist/src/main",
