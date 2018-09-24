@@ -59,7 +59,9 @@ export class Resource {
 }
 
 export class ResourceRequest {
-  private _query: any;
+  private _query: {
+    [name: string]: any
+  };
   private _version: number;
   private _representation?: Representation;
   private _representations?: Representation[];
@@ -112,7 +114,7 @@ export class ResourceRequest {
     this.curResource = <Resource>lastResource;
   }
 
-  public get query(): any {
+  public get query() {
     return this._query;
   }
 
