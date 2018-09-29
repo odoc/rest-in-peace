@@ -101,7 +101,7 @@ export class Service implements ServiceInterface {
     if (this.basePath[0] != '/') {
       this.basePath = `/${this.basePath}`;
     }
-    this.app.use(bodyParser.json());
+    this.app.use(bodyParser.json({ limit: '50mb' }));
     this.app.use(<any>((err: any,
       //@ts-ignore
       req: any,

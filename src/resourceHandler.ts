@@ -344,6 +344,12 @@ export abstract class ResourceHandler {
     if (req.body != undefined) {
       data = req.body.data;
     }
+    if (req.body != undefined && req.body.data == undefined &&
+      req.body.isArray == undefined
+    ) {
+      throw new Error("Invalid payload without isArray and data properties. " +
+        "Or it can be a case where payload is larger than max-allowed 50MB.");
+    }
     let isArray = false;
     if (req.body != undefined && req.body.isArray == true) {
       isArray = true;
