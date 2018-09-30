@@ -1,5 +1,4 @@
 import { ErrorResponse } from './errorResponse';
-import { Service } from './../service';
 
 export enum ServerErrorHttpStatusCode {
   InternalServerError = 500,
@@ -14,9 +13,8 @@ const ServerErrorMessages = new Map<number, string>([
 ])
 
 export class ServerErrorResponse extends ErrorResponse {
-  private _stack?: string;
-
-  protected constructor(statusCode: number,
+  protected constructor(
+    statusCode: number,
     errorMessage?: string,
     stack?: string
   ) {
@@ -26,18 +24,9 @@ export class ServerErrorResponse extends ErrorResponse {
     if (errorMessage == undefined) {
       errorMessage = "Server Error";
     }
-    super(statusCode, errorMessage);
-    this._stack = stack;
+    super(statusCode, errorMessage, stack);
   }
 
-  public getPayload(): any {
-    return {
-      error: {
-        message: this._errorMessage,
-        stack: Service.isDevelopment() ? this._stack : undefined
-      }
-    }
-  }
 
   /**
    * Exception in server
