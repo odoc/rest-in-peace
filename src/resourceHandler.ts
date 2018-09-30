@@ -344,12 +344,19 @@ export abstract class ResourceHandler {
     if (req.body != undefined) {
       data = req.body.data;
     }
-    if (req.body != undefined && req.body.data == undefined &&
-      req.body.isArray == undefined
-    ) {
-      throw new Error("Invalid payload without isArray and data properties. " +
-        "Or it can be a case where payload is larger than max-allowed 50MB.");
-    }
+
+    // // Trying to catch case where JSON is no parsed due to too large payload
+    // // But this logic is not correct - it won't work well with legit GET
+    // if (req.body != undefined && req.body.data == undefined &&
+    //   req.body.isArray == undefined
+    // ) {
+    //   response = ClientErrorResponse.unprocessableEntity(
+    //     "Invalid payload without isArray and data properties. " +
+    //     "Or it can be a case where payload is larger than max-allowed 50MB."
+    //   );
+    //   response.send(res);
+    //   return;
+    // }
     let isArray = false;
     if (req.body != undefined && req.body.isArray == true) {
       isArray = true;
