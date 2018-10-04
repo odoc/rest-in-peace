@@ -37,6 +37,7 @@ export class ClientErrorResponse extends ErrorResponse {
   }
 
   /**
+   * 400 Bad Request.
    * General bad request, not symantic or syntax error
    */
   public static badRequest(errorMessage?: string) {
@@ -47,6 +48,7 @@ export class ClientErrorResponse extends ErrorResponse {
   }
 
   /**
+   * 401 Unauthorized.
    *  Client must authenticate. Authorization is covered by Forbidden
    */
   public static unauthorized() {
@@ -56,6 +58,7 @@ export class ClientErrorResponse extends ErrorResponse {
   }
 
   /**
+   * 403 Forbidden.
    * Unauthorized to access the given method.
    */
   public static forbidden() {
@@ -65,6 +68,7 @@ export class ClientErrorResponse extends ErrorResponse {
   }
 
   /**
+   * 404 Not Found.
    *  Resource couldn't be found or not authoized
    */
   public static notFound() {
@@ -74,6 +78,7 @@ export class ClientErrorResponse extends ErrorResponse {
   }
 
   /**
+   * 405 Method Not Allowed.
    * When one of the GET, GET_ALL, POST, PUT, POST not implemented
    */
   public static methodNotAllowed() {
@@ -83,6 +88,7 @@ export class ClientErrorResponse extends ErrorResponse {
   }
 
   /**
+   * 406 Not Acceptable.
    * Media-type on accept can't be served
    */
   public static notAcceptable() {
@@ -92,6 +98,7 @@ export class ClientErrorResponse extends ErrorResponse {
   }
 
   /**
+   * 409 Conflict.
    * Request conflicts with the current state of the server.
    */
   public static conflict(errorMessage?: string) {
@@ -102,6 +109,7 @@ export class ClientErrorResponse extends ErrorResponse {
   }
 
   /**
+   * 415 Unsupported Media Type.
    * Content-type is not supported. Should be application/json
    */
   public static unsupportedMediaType() {
@@ -111,6 +119,7 @@ export class ClientErrorResponse extends ErrorResponse {
   }
 
   /**
+   * 422 Unprocessable Entity.
    * Folllows content-type but sematics are invalid - i.e. schema issue
    */
   public static unprocessableEntity(errorMessage?: string) {

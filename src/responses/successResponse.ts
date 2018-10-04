@@ -103,6 +103,7 @@ export class SuccessResponse extends ResourceResponse {
   }
 
   /**
+   * 200 OK.
    * Should be used to show exisiting representations
    * @param isArray Whether this is a list of representations
    * @param representations Representation object or array of representations
@@ -119,6 +120,7 @@ export class SuccessResponse extends ResourceResponse {
   }
 
   /**
+   * 201 Created.
    * Should be used when creating a resource
    * @param isArray Whether this is a list of representations
    * @param representations Representation object or array of representations
@@ -137,6 +139,7 @@ export class SuccessResponse extends ResourceResponse {
   }
 
   /**
+   * 204 No Content.
    * When no data in the response
    */
   public static noContent(): SuccessResponse {

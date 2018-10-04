@@ -29,6 +29,7 @@ export class ServerErrorResponse extends ErrorResponse {
 
 
   /**
+   * 500 Internal Server Error.
    * Exception in server
    */
   public static internalServerError(error: Error) {
@@ -40,7 +41,8 @@ export class ServerErrorResponse extends ErrorResponse {
   }
 
   /**
-   * Any custom method that server doesn't implements
+   * 501 Not Implemented.
+   * Any custom method that server doesn't implement
    */
   public static notImplemented() {
     return new ServerErrorResponse(
@@ -49,6 +51,7 @@ export class ServerErrorResponse extends ErrorResponse {
   }
 
   /**
+   * 502 Bad Gateway.
    * The server, while acting as a gateway or proxy, received an invalid
    * response from the upstream server.
    */
