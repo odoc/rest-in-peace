@@ -139,11 +139,20 @@ export class SuccessResponse extends ResourceResponse {
   /**
    * When no data in the response
    */
-  public static noCotent(): SuccessResponse {
+  public static noContent(): SuccessResponse {
     return new SuccessResponse(
       SuccessHttpStatusCode.NoContent,
       false,
       undefined
     );
+  }
+
+
+  /**
+   * @deprecated Deprecated due to spelling mistake.
+   * Use noContent()
+   */
+  public static noCotent(): SuccessResponse {
+    return SuccessResponse.noContent();
   }
 }
